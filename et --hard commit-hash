@@ -1,0 +1,33 @@
+[33m1441fbc[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mBackup1[m[33m, [m[1;31morigin/Backup1[m[33m)[m HEAD@{0}: rebase: checkout Backup1
+[33m890f4bc[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m HEAD@{1}: checkout: moving from Backup1 to main
+[33m1441fbc[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mBackup1[m[33m, [m[1;31morigin/Backup1[m[33m)[m HEAD@{2}: commit: Major Fixes and Story Blueprint
+[33m890f4bc[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m HEAD@{3}: checkout: moving from main to Backup1
+[33m890f4bc[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m HEAD@{4}: commit: Some Changes and Improvements were performed
+[33m515fd60[m HEAD@{5}: commit: Call Activity Complete
+[33m66ef8ea[m HEAD@{6}: commit: MessageList and Chat Activity is complete and User Interface is improved.
+[33m1fa2b4e[m HEAD@{7}: commit: Homescreen and Explore Activity are complete
+[33m328f7e5[m HEAD@{8}: commit: The HomeScreen is started. Story icons are complete.
+[33mbe938df[m HEAD@{9}: commit: All login and signup activities are completed and major fixes were performed. Lets move to the part where user actually logs in.
+[33mf3b98c4[m HEAD@{10}: commit: Activity 4 i.e. The Login Screen number 2 with the Image is coded. There is a Little Problem with the layout. I am now going to make some changes and try the new one. If it does not work i am gonna switch back probably.
+[33m66146b5[m HEAD@{11}: commit: Activity 3 i.e. The SignUp Screen is coded. And the Create Account button navigates to a new activity. Although clicking on Create Account works even if some input field is empty.
+[33mbcd1805[m HEAD@{12}: rebase (finish): returning to refs/heads/main
+[33mbcd1805[m HEAD@{13}: rebase (start): checkout bcd18050c763178e21bef29b0e1c77227b850d9d
+[33m7d229bd[m HEAD@{14}: commit: git remote add origin https://github.com/NaveedAhmed5/Socially_InstagramClone.git git branch -M main git push -u origin main
+[33mbcd1805[m HEAD@{15}: commit: Next Step is to create a button which is used to import Profile Image for the Socially Profile Sign Up Process. This commit is a checkpoint before that.
+[33m482e340[m HEAD@{16}: rebase (finish): returning to refs/heads/main
+[33m482e340[m HEAD@{17}: rebase (start): checkout 482e340856dad804611224fc1e751e5fbe74ad72
+[33mb05358f[m HEAD@{18}: commit: Next Step is to create a button which is used to import Profile Image for the Socially Profile Sign Up Process. This commit is a checkpoint before that.
+[33m482e340[m HEAD@{19}: Branch: renamed refs/heads/master to refs/heads/main
+[33m482e340[m HEAD@{21}: commit: The Input Activity is created and The SignUp Activity is started
+[33ma8b1e1a[m HEAD@{22}: rebase (finish): returning to refs/heads/master
+[33ma8b1e1a[m HEAD@{23}: rebase (start): checkout a8b1e1a5c393449304d535efb3f9c1758bdaaaf4
+[33m4de6ca3[m HEAD@{24}: rebase (finish): returning to refs/heads/master
+[33m4de6ca3[m HEAD@{25}: rebase (continue): git reflog
+[33ma8b1e1a[m HEAD@{26}: rebase (start): checkout a8b1e1a5c393449304d535efb3f9c1758bdaaaf4
+[33mf18a39d[m HEAD@{27}: commit: git reflog
+[33ma6aef94[m HEAD@{28}: rebase (finish): returning to refs/heads/master
+[33ma6aef94[m HEAD@{29}: rebase (start): checkout a8b1e1a5c393449304d535efb3f9c1758bdaaaf4
+[33ma6aef94[m HEAD@{30}: revert: Revert "git init"
+[33ma8b1e1a[m HEAD@{31}: commit (amend): git init
+[33m4c3378f[m HEAD@{32}: commit (amend): git init
+[33m3eb0ffb[m HEAD@{33}: commit (initial): git init
