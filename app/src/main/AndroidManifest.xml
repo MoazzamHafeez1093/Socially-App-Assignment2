@@ -12,6 +12,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Assignment1">
         <activity
+            android:name=".UserProfile"
+            android:exported="false" />
+        <activity
+            android:name=".UserStoryView"
+            android:exported="false" />
+        <activity
+            android:name=".story_Upload"
+            android:exported="false" />
+        <activity
+            android:name=".storyHiglight"
+            android:exported="false" />
+        <activity
             android:name=".storyViewOwn"
             android:exported="false"
             android:launchMode="singleTop" />

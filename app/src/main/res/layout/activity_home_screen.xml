@@ -253,13 +253,16 @@
 
                                 <!-- Profile picture -->
                                 <ImageView
+                                    android:id="@+id/UserStoryView"
                                     android:layout_width="82dp"
                                     android:layout_height="82dp"
                                     android:layout_gravity="center"
                                     android:src="@drawable/sofia_martinez"
                                     android:scaleType="centerCrop"
                                     android:background="@drawable/circlestory"
-                                    android:clipToOutline="true"/>
+                                    android:clipToOutline="true"
+                                    android:clickable="true"
+                                    android:focusable="true"/>
                             </FrameLayout>
 
                             <!-- Username below story -->

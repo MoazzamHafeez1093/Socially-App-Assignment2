@@ -27,6 +27,9 @@
         app:layout_constraintStart_toStartOf="parent"
         android:layout_margin="16dp"
         android:background="@drawable/circle"
+        android:src="@drawable/sofia_martinez"
+        android:clipToOutline="true"
+        android:scaleType="fitXY"
         android:backgroundTint="@color/grey"/>
 
     <TextView
@@ -37,7 +40,7 @@
         app:layout_constraintTop_toBottomOf="@id/story_line"
         android:textStyle="bold"
         android:textSize="18sp"
-        android:text="Naveed"
+        android:text="Sofia"
         android:textColor="@color/white"
         android:layout_margin="16dp"/>
 
@@ -73,6 +76,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:src="@drawable/mystory_bar"
+        android:src="@drawable/userstoryview_bar"
         android:scaleType="fitXY"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -66,12 +66,18 @@ class HomeScreen : AppCompatActivity() {
         val storyOwnBtn = findViewById<ImageView>(R.id.profileImageView)
         storyOwnBtn.setOnClickListener {
             val intentStoryOwn = Intent(this, storyViewOwn::class.java)
-            val intentSearch = Intent(this, search::class.java)
             imageUriString?.let {
                 val imageUri = Uri.parse(it)
-                intentSearch.putExtra("PROFILE_IMAGE_URI", imageUri.toString()) // Pass URI as String
+                intentStoryOwn.putExtra("PROFILE_IMAGE_URI", imageUri.toString()) // Pass URI as String
             }
             startActivity(intentStoryOwn)
+            overridePendingTransition(0, 0)
+        }
+
+        val UserStoryBtn = findViewById<ImageView>(R.id.UserStoryView)
+        UserStoryBtn.setOnClickListener {
+            val intentUserStory = Intent(this, storyViewOwn::class.java)
+            startActivity(intentUserStory)
             overridePendingTransition(0, 0)
         }
     }
