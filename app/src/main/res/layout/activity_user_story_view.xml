@@ -5,10 +5,13 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/story_1"
-    android:clickable="true"
-    android:focusable="true">
-
+    android:background="@drawable/story_1">
+    <Button
+        android:id="@+id/storyEnd"
+        android:layout_width="match_parent"
+        android:layout_height="900dp"
+        android:background="@color/transparent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
     <ImageView
         android:id="@+id/story_line"
         android:layout_width="match_parent"
@@ -30,7 +33,9 @@
         android:src="@drawable/sofia_martinez"
         android:clipToOutline="true"
         android:scaleType="fitXY"
-        android:backgroundTint="@color/grey"/>
+        android:backgroundTint="@color/grey"
+        android:clickable="true"
+        android:focusable="true"/>
 
     <TextView
         android:id="@+id/name"

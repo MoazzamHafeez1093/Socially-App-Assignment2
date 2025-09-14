@@ -13,8 +13,7 @@
       <clip-path
           android:pathData="M16,26C16,19.37 21.37,14 28,14C34.63,14 40,19.37 40,26C40,32.63 34.63,38 28,38C21.37,38 16,32.63 16,26Z"/>
       <path
-          android:pathData="M16,14h24v24h-24z"
-          android:fillColor="url(#pattern0_1_1359)"/>
+          android:pathData="M16,14h24v24h-24z"/>
     </group>
     <path
         android:pathData="M47,13C54.18,13 60,18.82 60,26C60,33.18 54.18,39 47,39C39.82,39 34,33.18 34,26C34,18.82 39.82,13 47,13Z"
@@ -25,8 +24,7 @@
       <clip-path
           android:pathData="M35,26C35,19.37 40.37,14 47,14C53.63,14 59,19.37 59,26C59,32.63 53.63,38 47,38C40.37,38 35,32.63 35,26Z"/>
       <path
-          android:pathData="M35,14h24v24h-24z"
-          android:fillColor="url(#pattern1_1_1359)"/>
+          android:pathData="M35,14h24v24h-24z"/>
     </group>
     <path
         android:pathData="M66,13C73.18,13 79,18.82 79,26C79,33.18 73.18,39 66,39C58.82,39 53,33.18 53,26C53,18.82 58.82,13 66,13Z"
@@ -37,8 +35,7 @@
       <clip-path
           android:pathData="M54,26C54,19.37 59.37,14 66,14C72.63,14 78,19.37 78,26C78,32.63 72.63,38 66,38C59.37,38 54,32.63 54,26Z"/>
       <path
-          android:pathData="M54,14h24v24h-24z"
-          android:fillColor="url(#pattern2_1_1359)"/>
+          android:pathData="M54,14h24v24h-24z"/>
     </group>
   </group>
   <path

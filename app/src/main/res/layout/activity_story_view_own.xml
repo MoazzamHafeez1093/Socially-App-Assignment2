@@ -16,8 +16,7 @@
         app:layout_constraintTop_toTopOf="parent"
         android:src="@drawable/linewhite"
         android:layout_margin="16dp"
-        android:background="@color/dark_grey"
-        android:scaleType="fitStart"/>
+        android:background="@drawable/circle"/>
 
     <ImageView
         android:id="@+id/profile_image"
@@ -27,7 +26,9 @@
         app:layout_constraintStart_toStartOf="parent"
         android:layout_margin="16dp"
         android:background="@drawable/circle"
-        android:backgroundTint="@color/grey"/>
+        android:backgroundTint="@color/grey"
+        android:clipToOutline="true"
+        android:scaleType="fitStart"/>
 
     <TextView
         android:id="@+id/name"

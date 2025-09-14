@@ -76,9 +76,28 @@ class HomeScreen : AppCompatActivity() {
 
         val UserStoryBtn = findViewById<ImageView>(R.id.UserStoryView)
         UserStoryBtn.setOnClickListener {
-            val intentUserStory = Intent(this, storyViewOwn::class.java)
+            val intentUserStory = Intent(this, UserStoryView::class.java)
             startActivity(intentUserStory)
             overridePendingTransition(0, 0)
         }
+
+        val notificationBtn = findViewById<ImageButton>(R.id.tab_4_notification)
+        notificationBtn.setOnClickListener {
+            val intentnotification = Intent(this, notifications::class.java)
+            startActivity(intentnotification)
+            overridePendingTransition(0, 0)
+        }
+
+        val MyProfileBtn = findViewById<ImageButton>(R.id.tab_5)
+        MyProfileBtn.setOnClickListener {
+            val intentMyProfile = Intent(this, OwnProfile::class.java)
+            imageUriString?.let {
+                val imageUri = Uri.parse(it)
+                intentMyProfile.putExtra("PROFILE_IMAGE_URI", imageUri.toString()) // Pass URI as String
+            }
+            startActivity(intentMyProfile)
+            overridePendingTransition(0, 0)
+        }
+
     }
 }

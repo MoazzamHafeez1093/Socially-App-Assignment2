@@ -33,13 +33,32 @@ class search : AppCompatActivity() {
         }
 
         val homeBtn = findViewById<ImageButton>(R.id.tab_1)
-
         homeBtn.setOnClickListener {
             val intentHome = Intent(this, HomeScreen::class.java).apply {
                 // If HomeScreen exists in the task, move it to front; else create it
                 addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
             }
             startActivity(intentHome)
+            overridePendingTransition(0, 0)
+            finish()
+        }
+
+        val notificationBtn = findViewById<ImageButton>(R.id.tab_4_notification)
+        notificationBtn.setOnClickListener {
+            val intentnotification = Intent(this, notifications::class.java)
+            startActivity(intentnotification)
+            overridePendingTransition(0, 0)
+            finish()
+        }
+
+        val MyProfileBtn = findViewById<ImageButton>(R.id.tab_5)
+        MyProfileBtn.setOnClickListener {
+            val intentMyProfile = Intent(this, OwnProfile::class.java)
+            imageUriString?.let {
+                val imageUri = Uri.parse(it)
+                intentMyProfile.putExtra("PROFILE_IMAGE_URI", imageUri.toString()) // Pass URI as String
+            }
+            startActivity(intentMyProfile)
             overridePendingTransition(0, 0)
             finish()
         }

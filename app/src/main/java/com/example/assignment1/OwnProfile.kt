@@ -4,20 +4,29 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.ImageButton
+import android.widget.ImageView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
-class UserProfile : AppCompatActivity() {
+class OwnProfile : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_user_profile)
+        setContentView(R.layout.activity_own_profile)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
+        }
+
+        // Retrieve the profile image URI from the intent
+        val imageUriString = intent.getStringExtra("PROFILE_IMAGE_URI")
+        val profileImageView = findViewById<ImageView>(R.id.UserStoryView)
+        if (imageUriString != null) {
+            val imageUri = Uri.parse(imageUriString)
+            profileImageView.setImageURI(imageUri)
         }
 
         val homeBtn = findViewById<ImageButton>(R.id.tab_1)
@@ -41,23 +50,6 @@ class UserProfile : AppCompatActivity() {
             finish()
         }
 
-        // Set up the Search button to open the search screen
-        val highlightBtn = findViewById<ImageButton>(R.id.highlight_1)
-        highlightBtn.setOnClickListener {
-            val intentHighlight = Intent(this, storyHighlight::class.java)
-            startActivity(intentHighlight)
-            overridePendingTransition(0, 0)
-            finish()
-        }
-
-        val MyProfileBtn = findViewById<ImageButton>(R.id.tab_5)
-        MyProfileBtn.setOnClickListener {
-            val intentMyProfile = Intent(this, OwnProfile::class.java)
-            startActivity(intentMyProfile)
-            overridePendingTransition(0, 0)
-            finish()
-        }
-
         val notificationBtn = findViewById<ImageButton>(R.id.tab_4_notification)
         notificationBtn.setOnClickListener {
             val intentnotification = Intent(this, notifications::class.java)
@@ -65,5 +57,7 @@ class UserProfile : AppCompatActivity() {
             overridePendingTransition(0, 0)
             finish()
         }
+
+
     }
 }

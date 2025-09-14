@@ -564,9 +564,5 @@
                 android:clipToOutline="true"
                 android:layout_gravity="center"/>
         </FrameLayout>
-
-
-
-
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
