@@ -169,7 +169,7 @@
                                     android:layout_width="82dp"
                                     android:layout_height="82dp"
                                     android:layout_gravity="center"
-                                    android:src="@drawable/ayesha_khan"
+                                    android:src="@drawable/ic_default_profile"
                                     android:scaleType="centerCrop"
                                     android:background="@drawable/circlestory"
                                     android:clipToOutline="true"/>

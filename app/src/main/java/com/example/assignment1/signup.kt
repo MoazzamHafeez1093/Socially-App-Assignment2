@@ -4,6 +4,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.enableEdgeToEdge
@@ -15,6 +16,7 @@ import android.content.Intent
 import androidx.appcompat.widget.AppCompatButton
 import com.google.android.material.appbar.MaterialToolbar
 import android.widget.EditText
+import com.example.assignment1.utils.FirebaseAuthManager
 import java.util.*
 
 
@@ -32,6 +34,8 @@ class signup : AppCompatActivity() {
     // Keep track of selected image Uri (so we can send it to next activity)
     private var selectedImageUri: Uri? = null
 
+    private lateinit var authManager: FirebaseAuthManager
+
     // Launcher for image picker (opens gallery and sets selected image to profileImageView)
     private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
@@ -44,6 +48,8 @@ class signup : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()  // makes UI stretch edge-to-edge for modern look
         setContentView(R.layout.activity_signup)
+
+        authManager = FirebaseAuthManager()
 
         // Handle system bar insets (status bar, navigation bar padding)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -82,24 +88,19 @@ class signup : AppCompatActivity() {
         // Handle create account button click
         val btnCreatAccount = findViewById<AppCompatButton>(R.id.createAccountBtn)
         btnCreatAccount.setOnClickListener {
-            // Grab the username from text field
+            // Get username field
             val usernameEditText: EditText = findViewById(R.id.userName1)
             val username = usernameEditText.text.toString().trim()
 
-            // Navigate to login screen and pass username + image Uri
-            val intentSignup = Intent(this, login2::class.java)
-            intentSignup.putExtra("USERNAME_KEY", username)
-
-            // Pass image Uri (if one was selected)
-            selectedImageUri?.let {
-                intentSignup.putExtra("IMAGE_URI_KEY", it.toString())
+            if (username.isEmpty()) {
+                Toast.makeText(this, "Please enter username", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
 
-            val sharedPref = getSharedPreferences("MyAppPrefs", MODE_PRIVATE)
-            sharedPref.edit().putString("USERNAME_KEY", username).apply()
-            sharedPref.edit().putString("IMAGE_URI_KEY", selectedImageUri.toString()).apply()
-
-            startActivity(intentSignup)
+            // For now, just navigate to home screen
+            Toast.makeText(this, "Account created successfully", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, HomeScreen::class.java)
+            startActivity(intent)
             finish()
         }
 

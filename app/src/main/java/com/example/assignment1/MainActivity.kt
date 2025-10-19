@@ -20,11 +20,11 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        // This will be used to show logo screen for 2 seconds
+        // Splash screen with 5-second delay as required
         Handler(Looper.getMainLooper()).postDelayed({
             val intent = Intent(this, LoginActivity::class.java)
             startActivity(intent)
             finish()
-        }, 2000) // 2000 ms = 2 seconds
+        }, 5000) // 5000 ms = 5 seconds
     }
 }
