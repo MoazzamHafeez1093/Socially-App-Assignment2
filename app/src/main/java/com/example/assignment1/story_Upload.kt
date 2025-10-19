@@ -42,22 +42,31 @@ class story_Upload : AppCompatActivity() {
                 if (base64 != null) {
                     val storyId = database.reference.child("stories").push().key
                     if (storyId != null) {
-                        val storyData = mapOf(
-                            "storyId" to storyId,
-                            "userId" to user.uid,
-                            "imageBase64" to base64,
-                            "timestamp" to System.currentTimeMillis(),
-                            "expiresAt" to (System.currentTimeMillis() + 24L * 60 * 60 * 1000)
-                        )
-                        database.reference.child("stories").child(storyId).setValue(storyData)
-                            .addOnSuccessListener {
-                                Toast.makeText(this, "Story uploaded", Toast.LENGTH_SHORT).show()
-                            }
-                            .addOnFailureListener {
-                                Toast.makeText(this, "Failed to upload story", Toast.LENGTH_SHORT).show()
-                            }
+                        // Get user data to include username
+                        authManager.getUserData(user.uid) { userData ->
+                            val username = userData?.username ?: "User"
+                            val storyData = mapOf(
+                                "storyId" to storyId,
+                                "userId" to user.uid,
+                                "username" to username,
+                                "imageBase64" to base64,
+                                "timestamp" to System.currentTimeMillis(),
+                                "expiresAt" to (System.currentTimeMillis() + 24L * 60 * 60 * 1000)
+                            )
+                            database.reference.child("stories").child(storyId).setValue(storyData)
+                                .addOnSuccessListener {
+                                    Toast.makeText(this, "Story uploaded successfully! Expires in 24 hours", Toast.LENGTH_LONG).show()
+                                }
+                                .addOnFailureListener {
+                                    Toast.makeText(this, "Failed to upload story", Toast.LENGTH_SHORT).show()
+                                }
+                        }
                     }
+                } else {
+                    Toast.makeText(this, "Failed to process image", Toast.LENGTH_SHORT).show()
                 }
+            } else {
+                Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show()
             }
         }
         val intentClose = findViewById<ConstraintLayout>(R.id.main)
