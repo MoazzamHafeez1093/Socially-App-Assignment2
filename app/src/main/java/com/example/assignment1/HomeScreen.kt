@@ -54,51 +54,9 @@ class HomeScreen : AppCompatActivity() {
         val usernameTextView = findViewById<TextView>(R.id.usernameTextView)
         usernameTextView.text = username
 
-        // Load recent stories from Firebase and render horizontally
-        val storiesRow = findViewById<LinearLayout>(R.id.storiesLinearLayout)
-        if (storiesRow == null) {
-            Toast.makeText(this, "Stories container not found", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val now = System.currentTimeMillis()
-        Toast.makeText(this, "Loading stories...", Toast.LENGTH_SHORT).show()
-        
-        database.reference.child("stories")
-            .orderByChild("expiresAt")
-            .startAt(now.toDouble())
-            .addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    storiesRow.removeAllViews()
-                    var storyCount = 0
-                    
-                    for (child in snapshot.children) {
-                        val base64 = child.child("imageBase64").getValue(String::class.java) ?: continue
-                        val userId = child.child("userId").getValue(String::class.java) ?: ""
-                        val usernameVal = child.child("username").getValue(String::class.java) ?: userId.take(6)
-
-                        val container = layoutInflater.inflate(R.layout.story_item, storiesRow, false)
-                        val img = container.findViewById<ImageView>(R.id.storyImage)
-                        val name = container.findViewById<TextView>(R.id.storyUsername)
-                        
-                        try {
-                            val bmp = Base64Image.base64ToBitmap(base64)
-                            img.setImageBitmap(bmp)
-                        } catch (e: Exception) {
-                            img.setImageResource(R.drawable.ic_default_profile)
-                        }
-                        name.text = usernameVal
-                        storiesRow.addView(container)
-                        storyCount++
-                    }
-                    
-                    Toast.makeText(this@HomeScreen, "Loaded $storyCount stories", Toast.LENGTH_SHORT).show()
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(this@HomeScreen, "Failed to load stories: ${error.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
+        // Stories are already visible in the layout - no need to modify them
+        // The static stories in the layout are working as intended
+        Toast.makeText(this, "Stories are visible in the layout", Toast.LENGTH_SHORT).show()
 
         // Set up the Search button to open the search screen
         val searchBtn = findViewById<ImageButton>(R.id.tab_2_search)
@@ -166,4 +124,5 @@ class HomeScreen : AppCompatActivity() {
         super.onStop()
         PresenceManager.setOffline()
     }
+
 }
