@@ -86,8 +86,8 @@ dependencies {
     // Image picker
     implementation("com.github.dhaval2404:imagepicker:2.1")
     
-    // Agora RTC SDK (placeholder for calls)
-    implementation("io.agora.rtc:full-sdk:4.3.3")
+    // Agora RTC SDK (placeholder for calls) - removed due to dependency issues
+    // implementation("io.agora.rtc:full-sdk:4.3.3")
     // Permissions
     implementation("com.karumi:dexter:6.2.3")
     
