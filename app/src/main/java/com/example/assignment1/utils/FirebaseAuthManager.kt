@@ -2,62 +2,74 @@ package com.example.assignment1.utils
 
 import android.content.Context
 import android.content.Intent
-import com.example.assignment1.HomeScreen
 import com.example.assignment1.LoginActivity
 import com.example.assignment1.models.User
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 
 class FirebaseAuthManager {
-    // Temporary implementation - will be replaced with real Firebase
-    private var currentUser: User? = null
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
 
     fun signUp(email: String, password: String, username: String, context: Context, onComplete: (Boolean, String?) -> Unit) {
-        // Simulate Firebase signup
-        if (email.isNotEmpty() && password.length >= 6) {
-            currentUser = User(
-                uid = "temp_${System.currentTimeMillis()}",
-                username = username,
-                email = email
-            )
-            onComplete(true, null)
-        } else {
-            onComplete(false, "Invalid credentials")
-        }
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val fbUser = auth.currentUser
+                    if (fbUser == null) {
+                        onComplete(false, "User not available after signup")
+                        return@addOnCompleteListener
+                    }
+                    val user = User(
+                        uid = fbUser.uid,
+                        username = username,
+                        email = email
+                    )
+                    database.reference.child("users").child(user.uid).setValue(user)
+                        .addOnCompleteListener { saveTask ->
+                            onComplete(saveTask.isSuccessful, saveTask.exception?.message)
+                        }
+                } else {
+                    onComplete(false, task.exception?.message ?: "Signup failed")
+                }
+            }
     }
 
     fun signIn(email: String, password: String, context: Context, onComplete: (Boolean, String?) -> Unit) {
-        // Simulate Firebase signin
-        if (email.isNotEmpty() && password.isNotEmpty()) {
-            currentUser = User(
-                uid = "temp_${System.currentTimeMillis()}",
-                email = email
-            )
-            onComplete(true, null)
-        } else {
-            onComplete(false, "Invalid credentials")
-        }
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    onComplete(true, null)
+                } else {
+                    onComplete(false, task.exception?.message ?: "Login failed")
+                }
+            }
     }
 
     fun signOut(context: Context) {
-        currentUser = null
+        auth.signOut()
         val intent = Intent(context, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         context.startActivity(intent)
     }
 
     fun getCurrentUser(): User? {
-        return currentUser
+        val fb = auth.currentUser ?: return null
+        return User(uid = fb.uid, email = fb.email ?: "")
     }
 
-    fun isUserLoggedIn(): Boolean {
-        return currentUser != null
-    }
+    fun isUserLoggedIn(): Boolean = auth.currentUser != null
 
     fun getUserData(uid: String, onComplete: (User?) -> Unit) {
-        onComplete(currentUser)
+        database.reference.child("users").child(uid).get()
+            .addOnSuccessListener { snap ->
+                onComplete(snap.getValue(User::class.java))
+            }
+            .addOnFailureListener { onComplete(null) }
     }
 
     fun updateUserProfile(user: User, onComplete: (Boolean) -> Unit) {
-        currentUser = user
-        onComplete(true)
+        database.reference.child("users").child(user.uid).setValue(user)
+            .addOnCompleteListener { onComplete(it.isSuccessful) }
     }
 }

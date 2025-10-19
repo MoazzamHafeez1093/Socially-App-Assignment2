@@ -43,18 +43,24 @@ class LoginActivity : AppCompatActivity() {
         val btnLogin = findViewById<Button>(R.id.btnLogin2)
         btnLogin.setOnClickListener {
             val emailEditText: EditText = findViewById(R.id.emailTextBox)
+            val passwordEditText: EditText = findViewById(R.id.passwordTextBox)
             val email = emailEditText.text.toString().trim()
+            val password = passwordEditText.text.toString()
 
-            if (email.isEmpty()) {
-                Toast.makeText(this, "Please enter email", Toast.LENGTH_SHORT).show()
+            if (email.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // For now, just navigate to home screen
-            Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
-            val intent = Intent(this, HomeScreen::class.java)
-            startActivity(intent)
-            finish()
+            authManager.signIn(email, password, this) { success, error ->
+                if (success) {
+                    val intent = Intent(this, HomeScreen::class.java)
+                    startActivity(intent)
+                    finish()
+                } else {
+                    Toast.makeText(this, error ?: "Login failed", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 }

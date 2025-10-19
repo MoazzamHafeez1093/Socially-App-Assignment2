@@ -9,13 +9,23 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import android.content.Intent
+import android.widget.LinearLayout
+import android.widget.Toast
+import com.example.assignment1.utils.Base64Image
+import com.example.assignment1.utils.PresenceManager
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 class HomeScreen : AppCompatActivity() {
+    private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_home_screen)
+        PresenceManager.setOnline()
 
         // Set padding for the main layout based on system bars (status bar, navigation bar)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -43,6 +53,39 @@ class HomeScreen : AppCompatActivity() {
         val username = intent.getStringExtra("USERNAME_KEY")
         val usernameTextView = findViewById<TextView>(R.id.usernameTextView)
         usernameTextView.text = username
+
+        // Load recent stories from Firebase and render horizontally
+        val storiesRow = findViewById<LinearLayout>(R.id.storiesLinearLayout)
+        val now = System.currentTimeMillis()
+        database.reference.child("stories")
+            .orderByChild("expiresAt")
+            .startAt(now.toDouble())
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    storiesRow.removeAllViews()
+                    for (child in snapshot.children) {
+                        val base64 = child.child("imageBase64").getValue(String::class.java) ?: continue
+                        val userId = child.child("userId").getValue(String::class.java) ?: ""
+                        val usernameVal = child.child("username").getValue(String::class.java) ?: userId.take(6)
+
+                        val container = layoutInflater.inflate(R.layout.story_item, storiesRow, false)
+                        val img = container.findViewById<ImageView>(R.id.storyImage)
+                        val name = container.findViewById<TextView>(R.id.storyUsername)
+                        try {
+                            val bmp = Base64Image.base64ToBitmap(base64)
+                            img.setImageBitmap(bmp)
+                        } catch (e: Exception) {
+                            img.setImageResource(R.drawable.ic_default_profile)
+                        }
+                        name.text = usernameVal
+                        storiesRow.addView(container)
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Toast.makeText(this@HomeScreen, "Failed to load stories", Toast.LENGTH_SHORT).show()
+                }
+            })
 
         // Set up the Search button to open the search screen
         val searchBtn = findViewById<ImageButton>(R.id.tab_2_search)
@@ -99,5 +142,15 @@ class HomeScreen : AppCompatActivity() {
             overridePendingTransition(0, 0)
         }
 
+    }
+
+    override fun onStart() {
+        super.onStart()
+        PresenceManager.setOnline()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        PresenceManager.setOffline()
     }
 }

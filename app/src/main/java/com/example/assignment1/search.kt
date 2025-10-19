@@ -11,8 +11,16 @@ import androidx.core.view.WindowInsetsCompat
 import android.content.Intent
 import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.EditText
+import android.widget.LinearLayout
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.example.assignment1.models.User
 
 class search : AppCompatActivity() {
+    private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -61,6 +69,37 @@ class search : AppCompatActivity() {
             startActivity(intentMyProfile)
             overridePendingTransition(0, 0)
             finish()
+        }
+
+        // Username search box
+        val searchInput = findViewById<EditText>(R.id.search_input)
+        val resultsContainer = findViewById<LinearLayout>(R.id.search_results)
+
+        // If IDs not present in XML, skip gracefully
+        if (searchInput != null && resultsContainer != null) {
+            searchInput.setOnEditorActionListener { v, _, _ ->
+                val query = v.text.toString().trim()
+                if (query.isEmpty()) return@setOnEditorActionListener true
+
+                database.reference.child("users")
+                    .orderByChild("username")
+                    .startAt(query)
+                    .endAt(query + "\uf8ff")
+                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            resultsContainer.removeAllViews()
+                            for (child in snapshot.children) {
+                                val user = child.getValue(User::class.java) ?: continue
+                                val row = layoutInflater.inflate(R.layout.search_user_row, resultsContainer, false)
+                                val nameView = row.findViewById<TextView>(R.id.result_username)
+                                nameView.text = user.username
+                                resultsContainer.addView(row)
+                            }
+                        }
+                        override fun onCancelled(error: DatabaseError) {}
+                    })
+                true
+            }
         }
     }
 }

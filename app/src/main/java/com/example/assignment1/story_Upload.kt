@@ -10,8 +10,14 @@ import androidx.core.view.WindowInsetsCompat
 import android.net.Uri
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.Toast
+import com.example.assignment1.utils.Base64Image
+import com.example.assignment1.utils.FirebaseAuthManager
+import com.google.firebase.database.FirebaseDatabase
 
 class story_Upload : AppCompatActivity() {
+    private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
+    private val authManager = FirebaseAuthManager()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -28,6 +34,31 @@ class story_Upload : AppCompatActivity() {
         if (imageUriString != null) {
             val imageUri = Uri.parse(imageUriString)
             profileImageView.setImageURI(imageUri)
+
+            // Upload as Base64 to Realtime DB as a story expiring in 24h
+            val user = authManager.getCurrentUser()
+            if (user != null) {
+                val base64 = Base64Image.uriToBase64(this, imageUri, 70)
+                if (base64 != null) {
+                    val storyId = database.reference.child("stories").push().key
+                    if (storyId != null) {
+                        val storyData = mapOf(
+                            "storyId" to storyId,
+                            "userId" to user.uid,
+                            "imageBase64" to base64,
+                            "timestamp" to System.currentTimeMillis(),
+                            "expiresAt" to (System.currentTimeMillis() + 24L * 60 * 60 * 1000)
+                        )
+                        database.reference.child("stories").child(storyId).setValue(storyData)
+                            .addOnSuccessListener {
+                                Toast.makeText(this, "Story uploaded", Toast.LENGTH_SHORT).show()
+                            }
+                            .addOnFailureListener {
+                                Toast.makeText(this, "Failed to upload story", Toast.LENGTH_SHORT).show()
+                            }
+                    }
+                }
+            }
         }
         val intentClose = findViewById<ConstraintLayout>(R.id.main)
         intentClose.setOnClickListener {

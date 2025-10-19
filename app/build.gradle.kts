@@ -4,6 +4,20 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+import java.util.Properties
+
+// Load local.properties (safe if file not present)
+val localProps = Properties().apply {
+    val localFile = rootProject.file("local.properties")
+    if (localFile.exists()) {
+        localFile.inputStream().use { load(it) }
+    }
+}
+
+// Read AGORA_APP_ID (default to empty string so builds won't fail)
+val agoraAppId: String = localProps.getProperty("AGORA_APP_ID", "")
+val agoraToken: String = localProps.getProperty("AGORA_TOKEN", "")
+
 android {
     namespace = "com.example.assignment1"
     compileSdk = 36
@@ -16,6 +30,14 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Expose AGORA_APP_ID to code via BuildConfig
+        buildConfigField("String", "AGORA_APP_ID", "\"$agoraAppId\"")
+        buildConfigField("String", "AGORA_TOKEN", "\"$agoraToken\"")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
@@ -36,6 +58,7 @@ android {
     }
 }
 
+// Keep your dependencies as-is; I preserved your list below
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -63,6 +86,8 @@ dependencies {
     // Image picker
     implementation("com.github.dhaval2404:imagepicker:2.1")
     
+    // Agora RTC SDK (placeholder for calls)
+    implementation("io.agora.rtc:full-sdk:4.3.3")
     // Permissions
     implementation("com.karumi:dexter:6.2.3")
     

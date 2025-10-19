@@ -88,20 +88,28 @@ class signup : AppCompatActivity() {
         // Handle create account button click
         val btnCreatAccount = findViewById<AppCompatButton>(R.id.createAccountBtn)
         btnCreatAccount.setOnClickListener {
-            // Get username field
             val usernameEditText: EditText = findViewById(R.id.userName1)
+            val emailEditText: EditText = findViewById(R.id.emailEditText)
+            val passwordEditText: EditText = findViewById(R.id.passwordEditText)
             val username = usernameEditText.text.toString().trim()
+            val email = emailEditText.text.toString().trim()
+            val password = passwordEditText.text.toString()
 
-            if (username.isEmpty()) {
-                Toast.makeText(this, "Please enter username", Toast.LENGTH_SHORT).show()
+            if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "Please enter username, email and password", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // For now, just navigate to home screen
-            Toast.makeText(this, "Account created successfully", Toast.LENGTH_SHORT).show()
-            val intent = Intent(this, HomeScreen::class.java)
-            startActivity(intent)
-            finish()
+            authManager.signUp(email, password, username, this) { success, message ->
+                if (success) {
+                    Toast.makeText(this, "Account created successfully", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this, HomeScreen::class.java)
+                    startActivity(intent)
+                    finish()
+                } else {
+                    Toast.makeText(this, message ?: "Signup failed", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
 
         // Set up toolbar (action bar at the top of the screen)

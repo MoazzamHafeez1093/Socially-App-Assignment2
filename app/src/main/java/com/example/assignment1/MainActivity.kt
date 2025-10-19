@@ -8,8 +8,10 @@ import androidx.core.view.WindowInsetsCompat
 import android.os.Handler
 import android.os.Looper
 import android.content.Intent
+import com.example.assignment1.utils.FirebaseAuthManager
 
 class MainActivity : AppCompatActivity() {
+    private val authManager = FirebaseAuthManager()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -22,9 +24,29 @@ class MainActivity : AppCompatActivity() {
 
         // Splash screen with 5-second delay as required
         Handler(Looper.getMainLooper()).postDelayed({
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
-            finish()
+            if (!authManager.isUserLoggedIn()) {
+                startActivity(Intent(this, LoginActivity::class.java))
+                finish()
+                return@postDelayed
+            }
+
+            val current = authManager.getCurrentUser()
+            if (current == null) {
+                startActivity(Intent(this, LoginActivity::class.java))
+                finish()
+                return@postDelayed
+            }
+
+            // Check if first-time (no username set) and route to profile setup
+            authManager.getUserData(current.uid) { user ->
+                val nextIntent = if (user == null || user.username.isBlank()) {
+                    Intent(this, signup::class.java)
+                } else {
+                    Intent(this, HomeScreen::class.java)
+                }
+                startActivity(nextIntent)
+                finish()
+            }
         }, 5000) // 5000 ms = 5 seconds
     }
 }
