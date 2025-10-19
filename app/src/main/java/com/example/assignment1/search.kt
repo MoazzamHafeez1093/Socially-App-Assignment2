@@ -13,6 +13,7 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.Toast
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -71,16 +72,29 @@ class search : AppCompatActivity() {
             finish()
         }
 
-        // Username search box
+        // Username search box - find the search input field
         val searchInput = findViewById<EditText>(R.id.search_input)
         val resultsContainer = findViewById<LinearLayout>(R.id.search_results)
+
+        // Debug: Check if elements exist
+        if (searchInput == null) {
+            Toast.makeText(this, "Search input not found", Toast.LENGTH_SHORT).show()
+        }
+        if (resultsContainer == null) {
+            Toast.makeText(this, "Results container not found", Toast.LENGTH_SHORT).show()
+        }
 
         // If IDs not present in XML, skip gracefully
         if (searchInput != null && resultsContainer != null) {
             searchInput.setOnEditorActionListener { v, _, _ ->
                 val query = v.text.toString().trim()
-                if (query.isEmpty()) return@setOnEditorActionListener true
+                if (query.isEmpty()) {
+                    Toast.makeText(this, "Please enter a username to search", Toast.LENGTH_SHORT).show()
+                    return@setOnEditorActionListener true
+                }
 
+                Toast.makeText(this, "Searching for: $query", Toast.LENGTH_SHORT).show()
+                
                 database.reference.child("users")
                     .orderByChild("username")
                     .startAt(query)
@@ -88,18 +102,25 @@ class search : AppCompatActivity() {
                     .addListenerForSingleValueEvent(object : ValueEventListener {
                         override fun onDataChange(snapshot: DataSnapshot) {
                             resultsContainer.removeAllViews()
+                            var resultCount = 0
                             for (child in snapshot.children) {
                                 val user = child.getValue(User::class.java) ?: continue
                                 val row = layoutInflater.inflate(R.layout.search_user_row, resultsContainer, false)
                                 val nameView = row.findViewById<TextView>(R.id.result_username)
                                 nameView.text = user.username
                                 resultsContainer.addView(row)
+                                resultCount++
                             }
+                            Toast.makeText(this@search, "Found $resultCount users", Toast.LENGTH_SHORT).show()
                         }
-                        override fun onCancelled(error: DatabaseError) {}
+                        override fun onCancelled(error: DatabaseError) {
+                            Toast.makeText(this@search, "Search failed: ${error.message}", Toast.LENGTH_SHORT).show()
+                        }
                     })
                 true
             }
+        } else {
+            Toast.makeText(this, "Search UI not properly configured", Toast.LENGTH_SHORT).show()
         }
     }
 }
