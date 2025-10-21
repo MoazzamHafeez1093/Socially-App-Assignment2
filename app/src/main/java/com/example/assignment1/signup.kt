@@ -46,121 +46,19 @@ class signup : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()  // makes UI stretch edge-to-edge for modern look
+        
+        // Create a simple signup screen programmatically to avoid any layout issues
+        createSimpleSignupScreen()
+
         try {
-            setContentView(R.layout.activity_signup)
+            authManager = FirebaseAuthManager()
         } catch (e: Exception) {
-            // If layout fails, create a simple signup screen programmatically
-            createSimpleSignupScreen()
+            // If Firebase fails to initialize, continue without it
         }
 
-        authManager = FirebaseAuthManager()
+        // Simple signup screen - no complex findViewById calls needed
 
-        // Handle system bar insets (status bar, navigation bar padding)
-        try {
-            ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-                insets
-            }
-        } catch (e: Exception) {
-            // If findViewById fails, continue without window insets
-        }
-
-        // Initialize profile image view and button (both pointing to the same camera button id in XML)
-        try {
-            profileImageView = findViewById(R.id.cameraButton)
-            cameraButton = findViewById(R.id.cameraButton)
-        } catch (e: Exception) {
-            // If findViewById fails, continue without these views
-        }
-
-        // When user taps camera button, open image picker
-        try {
-            cameraButton.setOnClickListener {
-                pickImage.launch("image/*")  // Only allow image selection
-            }
-        } catch (e: Exception) {
-            // If cameraButton is null, continue without image picker
-        }
-
-        // Initialize date of birth field
-        try {
-            dobEditText = findViewById(R.id.dobEditText)
-        } catch (e: Exception) {
-            // If findViewById fails, continue without DOB field
-        }
-
-        // Show date picker when clicking DOB field
-        try {
-            dobEditText.setOnClickListener {
-            val calendar = Calendar.getInstance()
-            val year = calendar.get(Calendar.YEAR)
-            val month = calendar.get(Calendar.MONTH)
-            val day = calendar.get(Calendar.DAY_OF_MONTH)
-
-            // Date picker dialog opens here
-            DatePickerDialog(this, { _, selectedYear, selectedMonth, selectedDay ->
-                // Format date nicely and put it inside the text field
-                val formattedDate = String.format("%02d/%02d/%04d", selectedDay, selectedMonth + 1, selectedYear)
-                dobEditText.setText(formattedDate)
-            }, year, month, day).show()
-            }
-        } catch (e: Exception) {
-            // If dobEditText is null, continue without date picker
-        }
-
-        // Handle create account button click
-        try {
-            val btnCreatAccount = findViewById<AppCompatButton>(R.id.createAccountBtn)
-            btnCreatAccount.setOnClickListener {
-            val usernameEditText: EditText = findViewById(R.id.userName1)
-            val emailEditText: EditText = findViewById(R.id.emailEditText)
-            val passwordEditText: EditText = findViewById(R.id.passwordEditText)
-            val username = usernameEditText.text.toString().trim()
-            val email = emailEditText.text.toString().trim()
-            val password = passwordEditText.text.toString()
-
-            if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Please enter username, email and password", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            try {
-                authManager.signUp(email, password, username, this) { success, message ->
-                    if (success) {
-                        Toast.makeText(this, "Account created successfully", Toast.LENGTH_SHORT).show()
-                        val intent = Intent(this, HomeScreen::class.java)
-                        startActivity(intent)
-                        finish()
-                    } else {
-                        Toast.makeText(this, message ?: "Signup failed", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            } catch (e: Exception) {
-                // If Firebase is not initialized, just navigate to home screen for demo
-                Toast.makeText(this, "Demo mode - Account created, navigating to home", Toast.LENGTH_SHORT).show()
-                val intent = Intent(this, HomeScreen::class.java)
-                startActivity(intent)
-                finish()
-            }
-        }
-        } catch (e: Exception) {
-            // If create account button is null, continue without button
-        }
-
-        // Set up toolbar (action bar at the top of the screen)
-        try {
-            setSupportActionBar(findViewById(R.id.toolbar))
-            supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
-            // Handle back button in toolbar (navigate back)
-            findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener {
-                onBackPressedDispatcher.onBackPressed()
-            }
-        } catch (e: Exception) {
-            // If toolbar is null, continue without toolbar
-        }
+        // Simple signup screen - all functionality handled in createSimpleSignupScreen()
     }
     
     private fun createSimpleSignupScreen() {

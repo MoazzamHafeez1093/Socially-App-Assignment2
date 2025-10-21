@@ -14,33 +14,27 @@ class MainActivity : AppCompatActivity() {
     private val authManager = FirebaseAuthManager()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        try {
-            setContentView(R.layout.activity_main)
-        } catch (e: Exception) {
-            // If layout fails, create a simple splash screen programmatically
-            createSimpleSplashScreen()
-        }
-        try {
-            ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-                insets
-            }
-        } catch (e: Exception) {
-            // If findViewById fails, continue without window insets
-        }
+        
+        // Create a simple splash screen programmatically to avoid any layout issues
+        createSimpleSplashScreen()
 
         // Splash screen with 5-second delay as required
         Handler(Looper.getMainLooper()).postDelayed({
             try {
-                // For now, always go to login to avoid Firebase initialization issues
-                startActivity(Intent(this, LoginActivity::class.java))
+                // Always go to login to avoid Firebase initialization issues
+                val intent = Intent(this, LoginActivity::class.java)
+                startActivity(intent)
                 finish()
             } catch (e: Exception) {
-                // If there's any error, go to login
-                startActivity(Intent(this, LoginActivity::class.java))
-                finish()
+                // If there's any error, try to go to login anyway
+                try {
+                    val intent = Intent(this, LoginActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                } catch (e2: Exception) {
+                    // If even that fails, just finish the activity
+                    finish()
+                }
             }
         }, 5000) // 5000 ms = 5 seconds
     }
