@@ -12,8 +12,18 @@ import android.content.Intent
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.assignment1.adapters.UserAdapter
+import com.example.assignment1.models.User
 
 class messageList : AppCompatActivity() {
+    
+    private lateinit var usersRecyclerView: RecyclerView
+    private lateinit var userAdapter: UserAdapter
+    private val users = mutableListOf<User>()
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -32,16 +42,35 @@ class messageList : AppCompatActivity() {
         // Set the username to a TextView
         usernameTextView.text = username
 
-        val chatPersonName: TextView=findViewById<TextView>(R.id.chatPersonName)
-        val personName = chatPersonName.text.toString().trim()
-
-
-        val chatBtn = findViewById<LinearLayout>(R.id.chat2)
-        chatBtn.setOnClickListener {
+        // Setup users list
+        setupUsersRecyclerView()
+        loadUsers()
+    }
+    
+    private fun setupUsersRecyclerView() {
+        usersRecyclerView = findViewById(R.id.usersRecyclerView)
+        userAdapter = UserAdapter(users) { user ->
+            // Handle user click - start chat
             val intentChat = Intent(this, chat::class.java)
-            intentChat.putExtra("PersonName", personName)
+            intentChat.putExtra("PersonName", user.username)
+            intentChat.putExtra("userId", user.userId)
             startActivity(intentChat)
         }
-
+        usersRecyclerView.layoutManager = LinearLayoutManager(this)
+        usersRecyclerView.adapter = userAdapter
+    }
+    
+    private fun loadUsers() {
+        // Add some sample users for demonstration
+        val sampleUsers = listOf(
+            User("user1", "Alice", "alice@example.com", ""),
+            User("user2", "Bob", "bob@example.com", ""),
+            User("user3", "Charlie", "charlie@example.com", ""),
+            User("user4", "Diana", "diana@example.com", "")
+        )
+        
+        users.clear()
+        users.addAll(sampleUsers)
+        userAdapter.notifyDataSetChanged()
     }
 }

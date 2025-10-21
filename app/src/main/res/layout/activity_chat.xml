@@ -60,7 +60,29 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1" />
 
-            <!-- Video Icon Section -->
+            <!-- Call buttons -->
+            <ImageButton
+                android:id="@+id/videoCallBtn"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/video_on"
+                android:layout_marginRight="4dp"
+                android:contentDescription="Video Call"
+                android:scaleType="fitXY"
+                android:background="@color/transparent"/>
+
+            <ImageButton
+                android:id="@+id/voiceCallBtn"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/mic_on"
+                android:layout_marginRight="4dp"
+                android:contentDescription="Voice Call"
+                android:scaleType="fitXY"
+                android:background="@color/transparent"/>
+
             <ImageButton
                 android:id="@+id/callBtn"
                 android:layout_width="35dp"
@@ -68,7 +90,7 @@
                 android:layout_gravity="center_vertical"
                 android:src="@drawable/call"
                 android:layout_marginRight="8dp"
-                android:contentDescription="Video Icon"
+                android:contentDescription="Call Options"
                 android:scaleType="fitXY"
                 android:background="@color/transparent"/>
 
@@ -87,6 +109,14 @@
 
     </LinearLayout>
 
+    <!-- Messages RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/messagesRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:padding="8dp"
+        app:layout_constraintTop_toBottomOf="@id/group_1"
+        app:layout_constraintBottom_toTopOf="@id/bottom_search" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/bottom_search"
@@ -118,12 +148,25 @@
 
 
         <EditText
-            android:layout_width="280dp"
+            android:id="@+id/messageInput"
+            android:layout_width="200dp"
             android:layout_height="match_parent"
             app:layout_constraintLeft_toRightOf="@id/camera"
             android:hint="Message..."
             android:layout_marginStart="12dp"
             android:background="@color/transparent"/>
+
+        <ImageButton
+            android:id="@+id/sendButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            app:layout_constraintLeft_toRightOf="@id/messageInput"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:src="@drawable/share_small"
+            android:background="@drawable/circle"
+            android:backgroundTint="@color/brown"
+            android:contentDescription="Send Message"/>
 
         <ImageButton
             android:id="@+id/sticker"

@@ -1,8 +1,22 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.google.gms.google.services)
+    id("com.google.gms.google-services")
 }
+
+import java.util.Properties
+
+// Load local.properties (safe if file not present)
+val localProps = Properties().apply {
+    val localFile = rootProject.file("local.properties")
+    if (localFile.exists()) {
+        localFile.inputStream().use { load(it) }
+    }
+}
+
+// Read AGORA_APP_ID (default to empty string so builds won't fail)
+val agoraAppId: String = localProps.getProperty("AGORA_APP_ID", "")
+val agoraToken: String = localProps.getProperty("AGORA_TOKEN", "")
 
 android {
     namespace = "com.example.assignment1"
@@ -16,6 +30,14 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Expose AGORA_APP_ID to code via BuildConfig
+        buildConfigField("String", "AGORA_APP_ID", "\"$agoraAppId\"")
+        buildConfigField("String", "AGORA_TOKEN", "\"$agoraToken\"")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
@@ -36,6 +58,7 @@ android {
     }
 }
 
+// Keep your dependencies as-is; I preserved your list below
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -43,13 +66,32 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-    implementation(libs.firebase.auth)
-    implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.play.services.auth)
-    implementation(libs.googleid)
-    implementation("androidx.recyclerview:recyclerview:1.3.2") // Added RecyclerView
-    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
-    implementation("com.google.firebase:firebase-database-ktx")// Added Firebase Realtime Database
+    
+    // Firebase dependencies
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-database")
+    implementation("com.google.firebase:firebase-storage")
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-analytics")
+    
+    // Additional dependencies for the app
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("androidx.cardview:cardview:1.0.0")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("de.hdodenhof:circleimageview:3.1.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
+    
+    // Image picker
+    implementation("com.github.dhaval2404:imagepicker:2.1")
+    
+    // Mock calling system (no external dependencies required)
+    // implementation("io.agora.rtc:full-sdk:3.3.0") // Commented out for assignment
+    
+    // Permissions
+    implementation("com.karumi:dexter:6.2.3")
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

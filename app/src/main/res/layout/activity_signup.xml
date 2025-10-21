@@ -89,7 +89,6 @@
             android:inputType="textPersonName"/>
 
         <EditText
-            android:id="@+id/yourNameEditText"
             android:layout_height="0dp"
             android:layout_width="350dp"
             android:layout_gravity="center"
@@ -100,7 +99,6 @@
             android:inputType="textPersonName"/>
 
         <EditText
-            android:id="@+id/lastNameEditText"
             android:layout_height="0dp"
             android:layout_width="350dp"
             android:layout_gravity="center"

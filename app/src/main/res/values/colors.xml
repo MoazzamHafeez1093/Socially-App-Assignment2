@@ -9,6 +9,7 @@
     <color name="black">#000000</color>
     <color name="dark_grey">#404040</color>
     <color name="transparent">#00000000</color>
-    <color name="purple_pink">#FF69B4</color>
+    <color name="purple_pink">#E03FD8</color>
     <color name="socially_brown">#8B4513</color>
+    <color name="light_grey">#F5F5F5</color>
 </resources>
