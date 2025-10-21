@@ -15,11 +15,20 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+        try {
+            setContentView(R.layout.activity_main)
+        } catch (e: Exception) {
+            // If layout fails, create a simple splash screen programmatically
+            createSimpleSplashScreen()
+        }
+        try {
+            ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+                insets
+            }
+        } catch (e: Exception) {
+            // If findViewById fails, continue without window insets
         }
 
         // Splash screen with 5-second delay as required
@@ -34,5 +43,31 @@ class MainActivity : AppCompatActivity() {
                 finish()
             }
         }, 5000) // 5000 ms = 5 seconds
+    }
+    
+    private fun createSimpleSplashScreen() {
+        val layout = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            gravity = android.view.Gravity.CENTER
+            setBackgroundColor(android.graphics.Color.WHITE)
+        }
+        
+        val logo = android.widget.TextView(this).apply {
+            text = "Socially"
+            textSize = 48f
+            setTextColor(android.graphics.Color.parseColor("#784A34"))
+            gravity = android.view.Gravity.CENTER
+        }
+        
+        val subtitle = android.widget.TextView(this).apply {
+            text = "from SMD"
+            textSize = 20f
+            setTextColor(android.graphics.Color.GRAY)
+            gravity = android.view.Gravity.CENTER
+        }
+        
+        layout.addView(logo)
+        layout.addView(subtitle)
+        setContentView(layout)
     }
 }

@@ -8,8 +8,7 @@
     tools:context=".LoginActivity">
 
 
-    <include
-        layout="@layout/include_in_every_activity"/>
+    <!-- Removed include to avoid conflicts -->
 
 
     <LinearLayout
