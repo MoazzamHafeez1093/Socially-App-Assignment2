@@ -48,18 +48,17 @@
                     app:layout_constraintLeft_toLeftOf="parent"
                     android:src="@drawable/camerabrown"/>
 
-                <!-- App title in the center -->
-                <TextView
+                <!-- App logo in the center -->
+                <ImageView
                     android:id="@+id/Logo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
+                    android:layout_width="120dp"
+                    android:layout_height="40dp"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toRightOf="parent"
-                    android:text="Socially"
-                    android:textColor="@color/brown"
-                    android:textSize="30sp"
-                    android:textStyle="bold"
-                    android:textAlignment="center"/>
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:src="@drawable/socially_logo_white"
+                    android:scaleType="fitCenter"/>
 
                 <!-- Share button on the right -->
                 <ImageButton

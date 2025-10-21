@@ -11,7 +11,7 @@ import android.net.Uri
 import android.widget.ImageButton
 import android.widget.ImageView
 
-class storyHighlight : AppCompatActivity() {
+class storyHiglight : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

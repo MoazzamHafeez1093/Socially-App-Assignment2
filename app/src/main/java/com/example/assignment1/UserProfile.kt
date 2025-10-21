@@ -44,7 +44,7 @@ class UserProfile : AppCompatActivity() {
         // Set up the Search button to open the search screen
         val highlightBtn = findViewById<ImageButton>(R.id.highlight_1)
         highlightBtn.setOnClickListener {
-            val intentHighlight = Intent(this, storyHighlight::class.java)
+            val intentHighlight = Intent(this, storyHiglight::class.java)
             startActivity(intentHighlight)
             overridePendingTransition(0, 0)
             finish()

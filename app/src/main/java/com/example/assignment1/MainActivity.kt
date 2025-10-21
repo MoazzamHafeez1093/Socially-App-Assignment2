@@ -1,30 +1,33 @@
 package com.example.assignment1
 
-import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import android.os.Handler
-import android.os.Looper
 import android.content.Intent
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var auth: FirebaseAuth
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
 
-        // This will be used to show logo screen for 2 seconds
-        Handler(Looper.getMainLooper()).postDelayed({
+        // No need to set content view for a splash screen that just redirects
+
+        auth = FirebaseAuth.getInstance()
+
+        // Check if user is signed in (non-null) and update UI accordingly.
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            // User is logged in, go straight to HomeScreen
+            val intent = Intent(this, HomeScreen::class.java)
+            startActivity(intent)
+        } else {
+            // No user is signed in, go to LoginActivity
             val intent = Intent(this, LoginActivity::class.java)
             startActivity(intent)
-            finish()
-        }, 2000) // 2000 ms = 2 seconds
+        }
+        // Finish this activity so the user can't navigate back to it
+        finish()
     }
 }

@@ -1,113 +1,139 @@
 package com.example.assignment1
 
-import android.net.Uri
-import android.os.Bundle
-import android.widget.ImageButton
-import android.widget.ImageView
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
-import androidx.activity.enableEdgeToEdge
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import com.google.android.material.textfield.TextInputEditText
 import android.app.DatePickerDialog
 import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import com.google.android.material.appbar.MaterialToolbar
-import android.widget.EditText
-import java.util.*
+import com.google.android.material.textfield.TextInputEditText
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
+import java.util.Calendar
+import java.util.Date
 
+// This data class is now defined in search.kt and is the single source of truth
+// We will use it here to ensure data consistency.
 
-// Signup screen class where user can enter details and create an account
 class signup : AppCompatActivity() {
 
-    // Image view to display profile picture chosen by user
-    private lateinit var profileImageView: ImageView
-    // Camera button to open gallery for picking an image
-    private lateinit var cameraButton: ImageButton
+    private lateinit var auth: FirebaseAuth
+    private lateinit var database: FirebaseDatabase
 
-    // Date of birth input field
+    private lateinit var profileImageView: ImageView
+    private lateinit var cameraButton: ImageButton
     private lateinit var dobEditText: TextInputEditText
 
-    // Keep track of selected image Uri (so we can send it to next activity)
     private var selectedImageUri: Uri? = null
 
-    // Launcher for image picker (opens gallery and sets selected image to profileImageView)
     private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
-            selectedImageUri = it   // save Uri for later use
-            profileImageView.setImageURI(it)  // show the chosen image inside ImageView
+            selectedImageUri = it
+            profileImageView.setImageURI(it)
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()  // makes UI stretch edge-to-edge for modern look
         setContentView(R.layout.activity_signup)
 
-        // Handle system bar insets (status bar, navigation bar padding)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        auth = FirebaseAuth.getInstance()
+        database = FirebaseDatabase.getInstance()
 
-        // Initialize profile image view and button (both pointing to the same camera button id in XML)
         profileImageView = findViewById(R.id.cameraButton)
         cameraButton = findViewById(R.id.cameraButton)
 
-        // When user taps camera button, open image picker
         cameraButton.setOnClickListener {
-            pickImage.launch("image/*")  // Only allow image selection
+            pickImage.launch("image/*")
         }
 
-        // Initialize date of birth field
         dobEditText = findViewById(R.id.dobEditText)
-
-        // Show date picker when clicking DOB field
         dobEditText.setOnClickListener {
-            val calendar = Calendar.getInstance()
-            val year = calendar.get(Calendar.YEAR)
-            val month = calendar.get(Calendar.MONTH)
-            val day = calendar.get(Calendar.DAY_OF_MONTH)
-
-            // Date picker dialog opens here
-            DatePickerDialog(this, { _, selectedYear, selectedMonth, selectedDay ->
-                // Format date nicely and put it inside the text field
-                val formattedDate = String.format("%02d/%02d/%04d", selectedDay, selectedMonth + 1, selectedYear)
-                dobEditText.setText(formattedDate)
-            }, year, month, day).show()
+            showDatePickerDialog()
         }
 
-        // Handle create account button click
-        val btnCreatAccount = findViewById<AppCompatButton>(R.id.createAccountBtn)
-        btnCreatAccount.setOnClickListener {
-            // Grab the username from text field
-            val usernameEditText: EditText = findViewById(R.id.userName1)
+        setupCreateAccountButton()
+        setupToolbar()
+    }
+
+    private fun showDatePickerDialog() {
+        val calendar = Calendar.getInstance()
+        DatePickerDialog(
+            this,
+            { _, year, month, day ->
+                val formattedDate = String.format("%02d/%02d/%04d", day, month + 1, year)
+                dobEditText.setText(formattedDate)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
+
+    private fun setupCreateAccountButton() {
+        val btnCreateAccount = findViewById<AppCompatButton>(R.id.createAccountBtn)
+        val usernameEditText = findViewById<EditText>(R.id.userName1)
+        val emailEditText = findViewById<EditText>(R.id.emailEditText)
+        val passwordEditText = findViewById<EditText>(R.id.passwordEditText)
+
+        btnCreateAccount.setOnClickListener {
+            val email = emailEditText.text.toString().trim()
+            val password = passwordEditText.text.toString().trim()
             val username = usernameEditText.text.toString().trim()
 
-            // Navigate to login screen and pass username + image Uri
-            val intentSignup = Intent(this, login2::class.java)
-            intentSignup.putExtra("USERNAME_KEY", username)
-
-            // Pass image Uri (if one was selected)
-            selectedImageUri?.let {
-                intentSignup.putExtra("IMAGE_URI_KEY", it.toString())
+            if (email.isEmpty() || password.isEmpty() || username.isEmpty()) {
+                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
 
-            val sharedPref = getSharedPreferences("MyAppPrefs", MODE_PRIVATE)
-            sharedPref.edit().putString("USERNAME_KEY", username).apply()
-            sharedPref.edit().putString("IMAGE_URI_KEY", selectedImageUri.toString()).apply()
-
-            startActivity(intentSignup)
-            finish()
+            auth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this) { task ->
+                    if (task.isSuccessful) {
+                        val firebaseUser = auth.currentUser
+                        firebaseUser?.let {
+                            saveUserToDatabase(it.uid, username, email)
+                        }
+                    } else {
+                        Toast.makeText(baseContext, "Sign up failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
         }
+    }
 
-        // Set up toolbar (action bar at the top of the screen)
+    private fun saveUserToDatabase(userId: String, username: String, email: String) {
+        val userRef = database.getReference("users").child(userId)
+
+        // Use the standardized User class from search.kt
+        val user = User(
+            uid = userId,
+            username = username,
+            email = email,
+            searchUsername = username.lowercase(),
+            createdAt = Date().time
+        )
+
+        userRef.setValue(user)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Account created successfully!", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this, OwnProfile::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                finish()
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to save user data: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun setupToolbar() {
         setSupportActionBar(findViewById(R.id.toolbar))
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
-        // Handle back button in toolbar (navigate back)
         findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
