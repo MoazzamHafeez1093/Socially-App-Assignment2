@@ -46,7 +46,7 @@ class ScreenshotDetector(private val activity: Activity) {
             "title" to "Screenshot Alert",
             "body" to "${currentUser.username} took a screenshot of your chat",
             "type" to "screenshot_alert",
-            "fromUserId" to currentUser.uid,
+            "fromUserId" to currentUser.userId,
             "fromUsername" to currentUser.username
         )
 

@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             // Check if first-time (no username set) and route to profile setup
-            authManager.getUserData(current.uid) { user ->
+            authManager.getUserData(current.userId) { user ->
                 val nextIntent = if (user == null || user.username.isBlank()) {
                     Intent(this, signup::class.java)
                 } else {

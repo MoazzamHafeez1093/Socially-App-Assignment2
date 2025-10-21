@@ -1,21 +1,19 @@
 package com.example.assignment1
 
+import android.content.Intent
 import android.os.Bundle
-import android.widget.ImageButton
+import android.widget.*
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import android.widget.Toast
-// Agora imports commented out due to dependency issues
-// import io.agora.rtc2.ChannelMediaOptions
-// import io.agora.rtc2.Constants
-// import io.agora.rtc2.IAgoraEventHandler
-// import io.agora.rtc2.RtcEngine
 
 class call : AppCompatActivity() {
-    // Agora RTC engine commented out due to dependency issues
-    // private var rtcEngine: RtcEngine? = null
+    
+    private lateinit var videoCallButton: Button
+    private lateinit var voiceCallButton: Button
+    private lateinit var endCallButton: ImageButton
+    private lateinit var callStatusText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,45 +25,42 @@ class call : AppCompatActivity() {
             insets
         }
 
-        val intentCall = findViewById<ImageButton>(R.id.callEnd)
-        intentCall.setOnClickListener {
+        initializeViews()
+        setupClickListeners()
+    }
+
+    private fun initializeViews() {
+        videoCallButton = findViewById(R.id.videoCallButton)
+        voiceCallButton = findViewById(R.id.voiceCallButton)
+        endCallButton = findViewById(R.id.callEnd)
+        callStatusText = findViewById(R.id.callStatusText)
+    }
+
+    private fun setupClickListeners() {
+        videoCallButton.setOnClickListener {
+            startCall("video")
+        }
+
+        voiceCallButton.setOnClickListener {
+            startCall("voice")
+        }
+
+        endCallButton.setOnClickListener {
             finish()
         }
-
-        // Show placeholder message for call functionality
-        Toast.makeText(this, "Call feature ready (Agora SDK integration pending)", Toast.LENGTH_LONG).show()
     }
 
-    // Agora methods commented out due to dependency issues
-    /*
-    private fun initAgoraAndJoin() {
-        val appId = BuildConfig.AGORA_APP_ID
-        val token = BuildConfig.AGORA_TOKEN
-        if (appId.isBlank() || token.isBlank()) {
-            Toast.makeText(this, "Agora not configured", Toast.LENGTH_SHORT).show()
-            return
+    private fun startCall(callType: String) {
+        val channelName = generateChannelName()
+        val intent = Intent(this, CallActivity::class.java).apply {
+            putExtra("channelName", channelName)
+            putExtra("callType", callType)
+            putExtra("isIncomingCall", false)
         }
-        try {
-            rtcEngine = RtcEngine.create(this, appId, object : IAgoraEventHandler() {})
-        } catch (e: Exception) {
-            Toast.makeText(this, "Agora init failed", Toast.LENGTH_SHORT).show()
-            return
-        }
-        val options = ChannelMediaOptions().apply {
-            channelProfile = Constants.CHANNEL_PROFILE_COMMUNICATION
-        }
-        rtcEngine?.joinChannel(token, "socially_room", 0, options)
+        startActivity(intent)
     }
 
-    private fun leaveChannel() {
-        rtcEngine?.leaveChannel()
-        RtcEngine.destroy()
-        rtcEngine = null
+    private fun generateChannelName(): String {
+        return "socially_call_${System.currentTimeMillis()}"
     }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        leaveChannel()
-    }
-    */
 }

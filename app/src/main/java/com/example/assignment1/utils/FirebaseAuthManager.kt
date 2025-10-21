@@ -21,11 +21,11 @@ class FirebaseAuthManager {
                         return@addOnCompleteListener
                     }
                     val user = User(
-                        uid = fbUser.uid,
+                        userId = fbUser.uid,
                         username = username,
                         email = email
                     )
-                    database.reference.child("users").child(user.uid).setValue(user)
+                    database.reference.child("users").child(user.userId).setValue(user)
                         .addOnCompleteListener { saveTask ->
                             onComplete(saveTask.isSuccessful, saveTask.exception?.message)
                         }
@@ -55,13 +55,13 @@ class FirebaseAuthManager {
 
     fun getCurrentUser(): User? {
         val fb = auth.currentUser ?: return null
-        return User(uid = fb.uid, email = fb.email ?: "")
+        return User(userId = fb.uid, email = fb.email ?: "")
     }
 
     fun isUserLoggedIn(): Boolean = auth.currentUser != null
 
-    fun getUserData(uid: String, onComplete: (User?) -> Unit) {
-        database.reference.child("users").child(uid).get()
+    fun getUserData(userId: String, onComplete: (User?) -> Unit) {
+        database.reference.child("users").child(userId).get()
             .addOnSuccessListener { snap ->
                 onComplete(snap.getValue(User::class.java))
             }
@@ -69,7 +69,7 @@ class FirebaseAuthManager {
     }
 
     fun updateUserProfile(user: User, onComplete: (Boolean) -> Unit) {
-        database.reference.child("users").child(user.uid).setValue(user)
+        database.reference.child("users").child(user.userId).setValue(user)
             .addOnCompleteListener { onComplete(it.isSuccessful) }
     }
 }

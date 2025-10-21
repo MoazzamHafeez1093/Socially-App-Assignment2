@@ -43,11 +43,11 @@ class story_Upload : AppCompatActivity() {
                     val storyId = database.reference.child("stories").push().key
                     if (storyId != null) {
                         // Get user data to include username
-                        authManager.getUserData(user.uid) { userData ->
+                        authManager.getUserData(user.userId) { userData ->
                             val username = userData?.username ?: "User"
                             val storyData = mapOf(
                                 "storyId" to storyId,
-                                "userId" to user.uid,
+                                "userId" to user.userId,
                                 "username" to username,
                                 "imageBase64" to base64,
                                 "timestamp" to System.currentTimeMillis(),

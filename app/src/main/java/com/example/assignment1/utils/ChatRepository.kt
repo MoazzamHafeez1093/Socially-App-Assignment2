@@ -1,9 +1,10 @@
 package com.example.assignment1.utils
 
+import android.content.Context
 import android.net.Uri
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.storage.FirebaseStorage
+import java.io.Serializable
 
 data class ChatMessage(
     val messageId: String = "",
@@ -13,12 +14,11 @@ data class ChatMessage(
     val content: String = "",   // text or imageUrl or postId
     val timestamp: Long = System.currentTimeMillis(),
     val editableUntil: Long = timestamp + 5 * 60 * 1000
-)
+) : Serializable
 
 class ChatRepository {
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseDatabase.getInstance().reference
-    private val storage = FirebaseStorage.getInstance().reference
 
     fun sendText(chatId: String, text: String, onComplete: (Boolean) -> Unit) {
         val uid = auth.currentUser?.uid ?: return onComplete(false)
@@ -34,23 +34,26 @@ class ChatRepository {
             .addOnCompleteListener { onComplete(it.isSuccessful) }
     }
 
-    fun sendImage(chatId: String, imageUri: Uri, onComplete: (Boolean) -> Unit) {
+    fun sendImage(context: Context, chatId: String, imageUri: Uri, onComplete: (Boolean) -> Unit) {
         val uid = auth.currentUser?.uid ?: return onComplete(false)
-        val fileRef = storage.child("chat_images/${System.currentTimeMillis()}_${uid}.jpg")
-        fileRef.putFile(imageUri).continueWithTask { fileRef.downloadUrl }
-            .addOnSuccessListener { url ->
-                val messageId = db.child("messages").child(chatId).push().key ?: return@addOnSuccessListener
-                val payload = ChatMessage(
-                    messageId = messageId,
-                    chatId = chatId,
-                    senderId = uid,
-                    type = "image",
-                    content = url.toString()
-                )
-                db.child("messages").child(chatId).child(messageId).setValue(payload)
-                    .addOnCompleteListener { onComplete(it.isSuccessful) }
-            }
-            .addOnFailureListener { onComplete(false) }
+        
+        // Convert image to Base64
+        val base64Image = Base64Image.uriToBase64(context, imageUri)
+        if (base64Image == null) {
+            onComplete(false)
+            return
+        }
+        
+        val messageId = db.child("messages").child(chatId).push().key ?: return onComplete(false)
+        val payload = ChatMessage(
+            messageId = messageId,
+            chatId = chatId,
+            senderId = uid,
+            type = "image",
+            content = base64Image // Store Base64 string instead of URL
+        )
+        db.child("messages").child(chatId).child(messageId).setValue(payload)
+            .addOnCompleteListener { onComplete(it.isSuccessful) }
     }
 
     fun sendPost(chatId: String, postId: String, onComplete: (Boolean) -> Unit) {
