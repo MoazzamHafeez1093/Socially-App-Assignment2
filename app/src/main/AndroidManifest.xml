@@ -104,6 +104,15 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Assignment1" />
         <activity
+            android:name=".FollowRequestsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".FollowersFollowingActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ProfilePictureUpdateActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
