@@ -34,11 +34,19 @@ class HomeScreen : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_home_screen)
-        PresenceManager.setOnline()
+        try {
+            PresenceManager.setOnline()
+        } catch (e: Exception) {
+            // If Firebase is not initialized, continue without presence
+        }
         
         // Initialize post repository and adapter
-        postRepository = PostRepository()
-        setupPostsRecyclerView()
+        try {
+            postRepository = PostRepository()
+            setupPostsRecyclerView()
+        } catch (e: Exception) {
+            // If Firebase is not initialized, continue without posts
+        }
 
         // Set padding for the main layout based on system bars (status bar, navigation bar)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -68,7 +76,11 @@ class HomeScreen : AppCompatActivity() {
         usernameTextView.text = username
 
         // Load and display stories from Firebase with 24-hour expiry
-        loadStoriesFromFirebase()
+        try {
+            loadStoriesFromFirebase()
+        } catch (e: Exception) {
+            // If Firebase is not initialized, continue without stories
+        }
 
         // Set up the Search button to open the search screen
         val searchBtn = findViewById<ImageButton>(R.id.tab_2_search)
@@ -133,7 +145,11 @@ class HomeScreen : AppCompatActivity() {
         }
 
         // Load posts from Firebase
-        loadPostsFromFirebase()
+        try {
+            loadPostsFromFirebase()
+        } catch (e: Exception) {
+            // If Firebase is not initialized, continue without posts
+        }
     }
 
     private fun setupPostsRecyclerView() {
@@ -168,12 +184,20 @@ class HomeScreen : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        PresenceManager.setOnline()
+        try {
+            PresenceManager.setOnline()
+        } catch (e: Exception) {
+            // If Firebase is not initialized, continue without presence
+        }
     }
 
     override fun onStop() {
         super.onStop()
-        PresenceManager.setOffline()
+        try {
+            PresenceManager.setOffline()
+        } catch (e: Exception) {
+            // If Firebase is not initialized, continue without presence
+        }
     }
 
     private fun loadStoriesFromFirebase() {

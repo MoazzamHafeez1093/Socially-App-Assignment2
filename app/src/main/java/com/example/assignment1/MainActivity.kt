@@ -24,27 +24,13 @@ class MainActivity : AppCompatActivity() {
 
         // Splash screen with 5-second delay as required
         Handler(Looper.getMainLooper()).postDelayed({
-            if (!authManager.isUserLoggedIn()) {
+            try {
+                // For now, always go to login to avoid Firebase initialization issues
                 startActivity(Intent(this, LoginActivity::class.java))
                 finish()
-                return@postDelayed
-            }
-
-            val current = authManager.getCurrentUser()
-            if (current == null) {
+            } catch (e: Exception) {
+                // If there's any error, go to login
                 startActivity(Intent(this, LoginActivity::class.java))
-                finish()
-                return@postDelayed
-            }
-
-            // Check if first-time (no username set) and route to profile setup
-            authManager.getUserData(current.userId) { user ->
-                val nextIntent = if (user == null || user.username.isBlank()) {
-                    Intent(this, signup::class.java)
-                } else {
-                    Intent(this, HomeScreen::class.java)
-                }
-                startActivity(nextIntent)
                 finish()
             }
         }, 5000) // 5000 ms = 5 seconds

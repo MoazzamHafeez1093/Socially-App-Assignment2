@@ -23,7 +23,9 @@ class FirebaseAuthManager {
                     val user = User(
                         userId = fbUser.uid,
                         username = username,
-                        email = email
+                        email = email,
+                        profileImageUrl = "",
+                        isOnline = true
                     )
                     database.reference.child("users").child(user.userId).setValue(user)
                         .addOnCompleteListener { saveTask ->
@@ -55,7 +57,13 @@ class FirebaseAuthManager {
 
     fun getCurrentUser(): User? {
         val fb = auth.currentUser ?: return null
-        return User(userId = fb.uid, email = fb.email ?: "")
+        return User(
+            userId = fb.uid, 
+            email = fb.email ?: "",
+            username = fb.displayName ?: "",
+            profileImageUrl = "",
+            isOnline = true
+        )
     }
 
     fun isUserLoggedIn(): Boolean = auth.currentUser != null
