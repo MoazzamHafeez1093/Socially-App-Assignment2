@@ -1,65 +1,69 @@
 package com.example.assignment1
 
+import android.app.Activity
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import android.os.Handler
 import android.os.Looper
 import android.content.Intent
-import com.example.assignment1.utils.FirebaseAuthManager
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.view.Gravity
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
 
-class MainActivity : AppCompatActivity() {
-    private val authManager = FirebaseAuthManager()
+class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // Create a simple splash screen programmatically to avoid any layout issues
-        createSimpleSplashScreen()
 
-        // Splash screen with 5-second delay as required
-        Handler(Looper.getMainLooper()).postDelayed({
-            try {
-                // Always go to login to avoid Firebase initialization issues
-                val intent = Intent(this, LoginActivity::class.java)
-                startActivity(intent)
-                finish()
-            } catch (e: Exception) {
-                // If there's any error, try to go to login anyway
+        try {
+            // Initialize Firebase
+            FirebaseApp.initializeApp(this)
+
+            // Create a simple splash screen programmatically
+            createSimpleSplashScreen()
+
+            // Splash screen with 3-second delay - ALWAYS go to login
+            Handler(Looper.getMainLooper()).postDelayed({
                 try {
+                    android.util.Log.d("MainActivity", "Splash complete - ALWAYS going to LoginActivity")
+                    
+                    // ALWAYS show login screen, never auto-login
                     val intent = Intent(this, LoginActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
                     startActivity(intent)
                     finish()
-                } catch (e2: Exception) {
-                    // If even that fails, just finish the activity
-                    finish()
+                } catch (e: Exception) {
+                    android.util.Log.e("MainActivity", "Error navigating: ${e.message}", e)
+                    e.printStackTrace()
                 }
-            }
-        }, 5000) // 5000 ms = 5 seconds
+            }, 3000) // 3000 ms = 3 seconds
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Error in onCreate", e)
+            finish()
+        }
     }
-    
+
     private fun createSimpleSplashScreen() {
-        val layout = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            gravity = android.view.Gravity.CENTER
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
             setBackgroundColor(android.graphics.Color.WHITE)
         }
-        
-        val logo = android.widget.TextView(this).apply {
+
+        val logo = TextView(this).apply {
             text = "Socially"
             textSize = 48f
             setTextColor(android.graphics.Color.parseColor("#784A34"))
-            gravity = android.view.Gravity.CENTER
+            gravity = Gravity.CENTER
         }
-        
-        val subtitle = android.widget.TextView(this).apply {
+
+        val subtitle = TextView(this).apply {
             text = "from SMD"
             textSize = 20f
             setTextColor(android.graphics.Color.GRAY)
-            gravity = android.view.Gravity.CENTER
+            gravity = Gravity.CENTER
         }
-        
+
         layout.addView(logo)
         layout.addView(subtitle)
         setContentView(layout)

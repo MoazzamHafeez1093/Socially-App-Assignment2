@@ -85,6 +85,55 @@ class PostRepository {
     }
 
     fun getPosts(onPostsLoaded: (List<Post>) -> Unit) {
+        val currentUserId = auth.currentUser?.uid
+        
+        if (currentUserId == null) {
+            // If not logged in, show all posts
+            getAllPosts(onPostsLoaded)
+            return
+        }
+        
+        // Get user's following list to filter posts
+        db.child("users").child(currentUserId).child("following").get().addOnSuccessListener { followingSnapshot ->
+            val followingList = mutableListOf<String>()
+            followingList.add(currentUserId) // Include own posts
+            
+            for (userSnapshot in followingSnapshot.children) {
+                val userId = userSnapshot.key
+                if (userId != null) {
+                    followingList.add(userId)
+                }
+            }
+            
+            // If not following anyone, show all posts
+            if (followingList.size <= 1) {
+                getAllPosts(onPostsLoaded)
+            } else {
+                // Get posts only from followed users
+                db.child("posts").orderByChild("timestamp").addValueEventListener(object : com.google.firebase.database.ValueEventListener {
+                    override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
+                        val posts = mutableListOf<Post>()
+                        for (postSnapshot in snapshot.children) {
+                            val post = postSnapshot.getValue(Post::class.java)
+                            if (post != null && followingList.contains(post.userId)) {
+                                posts.add(post)
+                            }
+                        }
+                        onPostsLoaded(posts.reversed()) // Show newest first
+                    }
+                    
+                    override fun onCancelled(error: com.google.firebase.database.DatabaseError) {
+                        onPostsLoaded(emptyList())
+                    }
+                })
+            }
+        }.addOnFailureListener {
+            // If error, show all posts
+            getAllPosts(onPostsLoaded)
+        }
+    }
+    
+    private fun getAllPosts(onPostsLoaded: (List<Post>) -> Unit) {
         db.child("posts").orderByChild("timestamp").addValueEventListener(object : com.google.firebase.database.ValueEventListener {
             override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
                 val posts = mutableListOf<Post>()

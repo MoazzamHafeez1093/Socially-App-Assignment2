@@ -8,7 +8,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import android.content.Intent
 import android.widget.Button
-import android.widget.EditText
+import com.google.android.material.textfield.TextInputEditText
 import com.example.assignment1.utils.FirebaseAuthManager
 
 class LoginActivity : AppCompatActivity() {
@@ -16,99 +16,81 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContentView(R.layout.activity_login)
         
-        // Create a simple login screen programmatically to avoid any layout issues
-        createSimpleLoginScreen()
+        // Handle status bar and navigation bar padding
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
 
         try {
             authManager = FirebaseAuthManager()
         } catch (e: Exception) {
-            // If Firebase fails to initialize, continue without it
+            Toast.makeText(this, "Firebase initialization failed: ${e.message}", Toast.LENGTH_LONG).show()
         }
 
-        // Simple login screen - all functionality handled in createSimpleLoginScreen()
+        setupLoginButton()
+        setupSignupButton()
+        setupForgotPasswordButton()
     }
     
-    private fun createSimpleLoginScreen() {
-        val layout = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            gravity = android.view.Gravity.CENTER
-            setBackgroundColor(android.graphics.Color.WHITE)
-            setPadding(50, 50, 50, 50)
-        }
+    private fun setupLoginButton() {
+        val emailTextBox = findViewById<TextInputEditText>(R.id.emailTextBox)
+        val passwordTextBox = findViewById<TextInputEditText>(R.id.passwordTextBox)
+        val loginButton = findViewById<Button>(R.id.btnLogin2)
         
-        val logo = android.widget.TextView(this).apply {
-            text = "Socially"
-            textSize = 48f
-            setTextColor(android.graphics.Color.parseColor("#784A34"))
-            gravity = android.view.Gravity.CENTER
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = 50
+        loginButton?.setOnClickListener {
+            val email = emailTextBox?.text.toString().trim()
+            val password = passwordTextBox?.text.toString().trim()
+            
+            if (email.isEmpty()) {
+                Toast.makeText(this, "Please enter your email", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
-        }
-        
-        val emailInput = android.widget.EditText(this).apply {
-            hint = "Email"
-            inputType = android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = 20
+            
+            if (password.isEmpty()) {
+                Toast.makeText(this, "Please enter your password", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
-        }
-        
-        val passwordInput = android.widget.EditText(this).apply {
-            hint = "Password"
-            inputType = android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = 20
-            }
-        }
-        
-        val loginButton = android.widget.Button(this).apply {
-            text = "Login"
-            setBackgroundColor(android.graphics.Color.parseColor("#784A34"))
-            setTextColor(android.graphics.Color.WHITE)
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = 20
-            }
-            setOnClickListener {
-                // Simple login - just go to home screen
-                val intent = Intent(this@LoginActivity, HomeScreen::class.java)
+            
+            // Try to login with Firebase
+            try {
+                authManager.signIn(email, password, this) { success, message ->
+                    if (success) {
+                        // Login successful, go to home screen
+                        val intent = Intent(this, HomeScreen::class.java)
+                        startActivity(intent)
+                        finish()
+                    } else {
+                        // Login failed, show error message
+                        Toast.makeText(this, message ?: "Login failed", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                // If Firebase fails, just navigate to home screen for now
+                Toast.makeText(this, "Firebase error, proceeding without auth", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this, HomeScreen::class.java)
                 startActivity(intent)
                 finish()
             }
         }
-        
-        val signupButton = android.widget.Button(this).apply {
-            text = "Sign Up"
-            setTextColor(android.graphics.Color.parseColor("#784A34"))
-            background = null
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            setOnClickListener {
-                val intent = Intent(this@LoginActivity, signup::class.java)
-                startActivity(intent)
-            }
+    }
+    
+    private fun setupSignupButton() {
+        val signupButton = findViewById<Button>(R.id.signupBtn)
+        signupButton?.setOnClickListener {
+            val intent = Intent(this, signup::class.java)
+            startActivity(intent)
         }
-        
-        layout.addView(logo)
-        layout.addView(emailInput)
-        layout.addView(passwordInput)
-        layout.addView(loginButton)
-        layout.addView(signupButton)
-        setContentView(layout)
+    }
+    
+    private fun setupForgotPasswordButton() {
+        val forgotPasswordButton = findViewById<Button>(R.id.forgotPassword)
+        forgotPasswordButton?.setOnClickListener {
+            Toast.makeText(this, "Forgot password functionality coming soon", Toast.LENGTH_SHORT).show()
+        }
     }
 }

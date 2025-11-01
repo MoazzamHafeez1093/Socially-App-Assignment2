@@ -8,68 +8,57 @@
     android:background="@color/white"
     tools:context=".MainActivity">
 
-
-<!--Will be included inside each activity-->
+    <!-- Main Socially Logo -->
     <ImageView
-        android:id="@+id/group_1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:scaleType="centerCrop"
-        android:layout_marginTop="-50dp"
-        android:src="@drawable/group_1"/>
-
-
-<!--Following is the code for the Socially Logo-->
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
+        android:id="@+id/logo_container"
+        android:layout_width="300dp"
+        android:layout_height="120dp"
+        android:src="@drawable/socially_logo"
+        android:contentDescription="Socially Logo"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        android:src="@drawable/socially_logo"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.3" />
 
-
-<!--Following is the code for the "From SMD" text-->
-    <TextView
+    <!-- From SMD Attribution -->
+    <LinearLayout
+        android:id="@+id/attribution_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@id/SMDText"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        android:textSize="20sp"
-        android:textColor="@color/grey"
-        android:textColorHighlight="@color/grey"
-        android:text="from"/>
-
-    <TextView
-        android:id="@+id/SMDText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@id/line"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        android:textSize="30sp"
-        android:textColor="@color/brown"
-        android:textColorHighlight="@color/brown"
-        android:text="SMD"
-        android:textStyle="bold"
-        android:layout_marginBottom="10dp"/>
-
-
-<!--Following is the code for the line below. Just for Display    -->
-    <ImageView
-        android:id="@+id/line"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        android:layout_marginBottom="10dp"
-        android:src="@drawable/line"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/logo_container"
+        android:layout_marginTop="80dp">
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/from_smd"
+            android:textColor="@color/socially_brown"
+            android:textSize="16sp"
+            android:fontFamily="sans-serif-light" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/smd"
+            android:textColor="@color/socially_brown"
+            android:textSize="20sp"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginTop="4dp" />
+
+        <View
+            android:layout_width="40dp"
+            android:layout_height="2dp"
+            android:background="@color/socially_brown"
+            android:layout_marginTop="8dp" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

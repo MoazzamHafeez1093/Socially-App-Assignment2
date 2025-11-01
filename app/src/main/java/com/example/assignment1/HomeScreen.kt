@@ -225,6 +225,26 @@ class HomeScreen : AppCompatActivity() {
     private fun loadStoriesFromFirebase() {
         try {
             val currentTime = System.currentTimeMillis()
+            val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+            
+            if (currentUserId == null) {
+                // If not logged in, show all stories
+                loadAllStories(currentTime)
+                return
+            }
+            
+            // Get user's following list to filter stories
+            database.reference.child("users").child(currentUserId).child("following").get()
+                .addOnSuccessListener { followingSnapshot ->
+                    val followingList = mutableListOf<String>()
+                    followingList.add(currentUserId) // Include own stories
+                    
+                    for (userSnapshot in followingSnapshot.children) {
+                        val userId = userSnapshot.key
+                        if (userId != null) {
+                            followingList.add(userId)
+                        }
+                    }
             
             // Load stories from Firebase with 24-hour expiry
             database.reference.child("stories")
@@ -232,14 +252,35 @@ class HomeScreen : AppCompatActivity() {
                 .startAt(currentTime.toDouble()) // Only get stories that haven't expired
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
-                        val stories = mutableListOf<Map<String, Any>>()
+                                val storyList = mutableListOf<com.example.assignment1.models.Story>()
                         for (storySnapshot in snapshot.children) {
+                                    try {
                             val storyData = storySnapshot.getValue(Map::class.java) as? Map<String, Any>
-                            storyData?.let { stories.add(it) }
+                                        if (storyData != null) {
+                                            val userId = storyData["userId"] as? String ?: ""
+                                            
+                                            // Filter: only show stories from followed users or all if not following anyone
+                                            if (followingList.isEmpty() || followingList.contains(userId)) {
+                                                val story = com.example.assignment1.models.Story(
+                                                    storyId = storyData["storyId"] as? String ?: "",
+                                                    userId = userId,
+                                                    username = storyData["username"] as? String ?: "User",
+                                                    userProfileImage = storyData["userProfileImageBase64"] as? String ?: "",
+                                                    imageUrl = storyData["imageBase64"] as? String ?: "",
+                                                    videoUrl = storyData["videoBase64"] as? String ?: "",
+                                                    timestamp = (storyData["timestamp"] as? Long) ?: System.currentTimeMillis(),
+                                                    expiresAt = (storyData["expiresAt"] as? Long) ?: System.currentTimeMillis()
+                                                )
+                                                storyList.add(story)
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        // Skip malformed story
+                                    }
                         }
                         
                         // Update UI with Firebase stories
-                        updateStoriesUI(stories)
+                                updateStoriesUI(storyList)
                         
                         // Clean up expired stories
                         cleanupExpiredStories(currentTime)
@@ -249,49 +290,90 @@ class HomeScreen : AppCompatActivity() {
                         Toast.makeText(this@HomeScreen, "Failed to load stories", Toast.LENGTH_SHORT).show()
                     }
                 })
+                }
+                .addOnFailureListener {
+                    // If error, show all stories
+                    loadAllStories(currentTime)
+                }
         } catch (e: Exception) {
             // If Firebase is not initialized, continue without stories
         }
     }
     
-    private fun updateStoriesUI(stories: List<Map<String, Any>>) {
-        try {
-            // Find the stories container in the layout - use a placeholder for now
-            val storiesContainer = findViewById<LinearLayout>(R.id.main)
-            
-            if (storiesContainer != null && stories.isNotEmpty()) {
-                // Clear existing story views
-                storiesContainer.removeAllViews()
-                
-                // Add Firebase stories to the container
-                stories.forEach { storyData ->
-                    val storyView = layoutInflater.inflate(R.layout.story_item_plain, storiesContainer, false)
-                    
-                    val storyImageView = storyView.findViewById<ImageView>(R.id.profileImageView)
-                    val storyUsername = storyView.findViewById<TextView>(R.id.usernameTextView)
-                    
-                    // Set username
-                    val username = storyData["username"] as? String ?: "User"
-                    storyUsername.text = username
-                    
-                    // Set story image (Base64)
-                    val imageBase64 = storyData["imageBase64"] as? String
-                    if (imageBase64 != null) {
+    private fun loadAllStories(currentTime: Long) {
+        database.reference.child("stories")
+            .orderByChild("expiresAt")
+            .startAt(currentTime.toDouble())
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val storyList = mutableListOf<com.example.assignment1.models.Story>()
+                    for (storySnapshot in snapshot.children) {
                         try {
-                            val bitmap = Base64Image.base64ToBitmap(imageBase64)
-                            storyImageView.setImageBitmap(bitmap)
+                            val storyData = storySnapshot.getValue(Map::class.java) as? Map<String, Any>
+                            if (storyData != null) {
+                                val story = com.example.assignment1.models.Story(
+                                    storyId = storyData["storyId"] as? String ?: "",
+                                    userId = storyData["userId"] as? String ?: "",
+                                    username = storyData["username"] as? String ?: "User",
+                                    userProfileImage = storyData["userProfileImageBase64"] as? String ?: "",
+                                    imageUrl = storyData["imageBase64"] as? String ?: "",
+                                    videoUrl = storyData["videoBase64"] as? String ?: "",
+                                    timestamp = (storyData["timestamp"] as? Long) ?: System.currentTimeMillis(),
+                                    expiresAt = (storyData["expiresAt"] as? Long) ?: System.currentTimeMillis()
+                                )
+                                storyList.add(story)
+                            }
                         } catch (e: Exception) {
-                            storyImageView.setImageResource(R.drawable.ic_default_profile)
+                            // Skip malformed story
                         }
                     }
-                    
-                    storiesContainer.addView(storyView)
+                    updateStoriesUI(storyList)
+                    cleanupExpiredStories(currentTime)
                 }
                 
-                Toast.makeText(this, "Loaded ${stories.size} stories", Toast.LENGTH_SHORT).show()
+                override fun onCancelled(error: DatabaseError) {
+                    Toast.makeText(this@HomeScreen, "Failed to load stories", Toast.LENGTH_SHORT).show()
+                }
+            })
+    }
+    
+    private fun updateStoriesUI(stories: List<com.example.assignment1.models.Story>) {
+        try {
+            // Find the stories RecyclerView in the layout using getIdentifier
+            val storiesRecyclerViewId = resources.getIdentifier("storiesRecyclerView", "id", packageName)
+            val storiesRecyclerView = if (storiesRecyclerViewId != 0) {
+                findViewById<RecyclerView?>(storiesRecyclerViewId)
+            } else {
+                null
+            }
+            
+            if (storiesRecyclerView != null) {
+                // Set up horizontal layout manager
+                val layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+                storiesRecyclerView.layoutManager = layoutManager
+                
+                // Create and set adapter
+                val storyAdapter = com.example.assignment1.adapters.StoryAdapter(stories) { story ->
+                    // Handle story click - open story viewer
+                    val intent = Intent(this, UserStoryView::class.java)
+                    intent.putExtra("story", story)
+                    startActivity(intent)
+                }
+                storiesRecyclerView.adapter = storyAdapter
+                
+                if (stories.isNotEmpty()) {
+                    Toast.makeText(this, "Loaded ${stories.size} active stories", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                // RecyclerView not found in layout - stories feature needs layout update
+                // See LAYOUT_UPDATES_REQUIRED.md for instructions
+                if (stories.isNotEmpty()) {
+                    Toast.makeText(this, "${stories.size} stories available (add storiesRecyclerView to layout)", Toast.LENGTH_SHORT).show()
+                }
             }
         } catch (e: Exception) {
             // If story UI update fails, continue without stories
+            android.util.Log.e("HomeScreen", "Error displaying stories: ${e.message}", e)
         }
     }
     
