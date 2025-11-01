@@ -12,7 +12,7 @@
 [33m66146b5[m HEAD@{11}: commit: Activity 3 i.e. The SignUp Screen is coded. And the Create Account button navigates to a new activity. Although clicking on Create Account works even if some input field is empty.
 [33mbcd1805[m HEAD@{12}: rebase (finish): returning to refs/heads/main
 [33mbcd1805[m HEAD@{13}: rebase (start): checkout bcd18050c763178e21bef29b0e1c77227b850d9d
-[33m7d229bd[m HEAD@{14}: commit: git remote add origin https://github.com/NaveedAhmed5/Socially_InstagramClone.git git branch -M main git push -u origin main
+[33m7d229bd[m HEAD@{14}: commit: git remote add origin https://github.com/MuhammadAsadMehdi/Socially_InstagramClone.git git branch -M main git push -u origin main
 [33mbcd1805[m HEAD@{15}: commit: Next Step is to create a button which is used to import Profile Image for the Socially Profile Sign Up Process. This commit is a checkpoint before that.
 [33m482e340[m HEAD@{16}: rebase (finish): returning to refs/heads/main
 [33m482e340[m HEAD@{17}: rebase (start): checkout 482e340856dad804611224fc1e751e5fbe74ad72

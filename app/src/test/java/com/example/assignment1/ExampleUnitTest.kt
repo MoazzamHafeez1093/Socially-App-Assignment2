@@ -1,4 +1,4 @@
-package com.i221093_i221120
+package com.example.assignment1
 
 import org.junit.Test
 
