@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
 import android.util.Base64
 import java.io.ByteArrayOutputStream
 
@@ -17,11 +18,18 @@ object Base64Image {
     }
 
     fun uriToBase64(context: Context, uri: Uri, quality: Int = 70): String? {
-        val src = ImageDecoder.createSource(context.contentResolver, uri)
-        val bitmap = ImageDecoder.decodeBitmap(src) { decoder, _, _ ->
-            decoder.isMutableRequired = false
+        val bitmap: Bitmap? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val src = ImageDecoder.createSource(context.contentResolver, uri)
+            ImageDecoder.decodeBitmap(src) { decoder, _, _ ->
+                decoder.isMutableRequired = false
+            }
+        } else {
+            // Fallback for API < 28
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                BitmapFactory.decodeStream(input)
+            }
         }
-        return bitmapToBase64(bitmap, quality)
+        return bitmap?.let { bitmapToBase64(it, quality) }
     }
 
     fun base64ToBitmap(base64: String): Bitmap {
@@ -29,5 +37,3 @@ object Base64Image {
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
     }
 }
-
-

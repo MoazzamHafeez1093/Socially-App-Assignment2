@@ -7,13 +7,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.example.assignment1.data.prefs.SessionManager
 
 class call : AppCompatActivity() {
     
-    private lateinit var videoCallButton: Button
-    private lateinit var voiceCallButton: Button
-    private lateinit var endCallButton: ImageButton
     private lateinit var callStatusText: TextView
+    private lateinit var sessionManager: SessionManager
+    private var receiverUserId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,42 +25,34 @@ class call : AppCompatActivity() {
             insets
         }
 
+        sessionManager = SessionManager(this)
+        receiverUserId = intent.getStringExtra("userId")
+
         initializeViews()
-        setupClickListeners()
+        startCall("video")
     }
 
     private fun initializeViews() {
-        videoCallButton = findViewById(R.id.videoCallButton)
-        voiceCallButton = findViewById(R.id.voiceCallButton)
-        endCallButton = findViewById(R.id.callEnd)
         callStatusText = findViewById(R.id.callStatusText)
     }
 
-    private fun setupClickListeners() {
-        videoCallButton.setOnClickListener {
-            startCall("video")
-        }
-
-        voiceCallButton.setOnClickListener {
-            startCall("voice")
-        }
-
-        endCallButton.setOnClickListener {
-            finish()
-        }
-    }
-
     private fun startCall(callType: String) {
-        val channelName = generateChannelName()
+        val currentUserId = sessionManager.getUserId() ?: return
+        val channelName = generateChannelName(currentUserId)
+        
+        // Start Agora call activity (Agora is allowed)
         val intent = Intent(this, CallActivity::class.java).apply {
             putExtra("channelName", channelName)
             putExtra("callType", callType)
             putExtra("isIncomingCall", false)
+            putExtra("receiverId", receiverUserId)
         }
         startActivity(intent)
+        Toast.makeText(this, "Starting call...", Toast.LENGTH_SHORT).show()
     }
 
-    private fun generateChannelName(): String {
-        return "socially_call_${System.currentTimeMillis()}"
+    private fun generateChannelName(userId: String): String {
+        val timestamp = System.currentTimeMillis()
+        return "socially_${userId}_${timestamp}"
     }
 }

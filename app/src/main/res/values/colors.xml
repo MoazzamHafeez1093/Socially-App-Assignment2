@@ -12,4 +12,9 @@
     <color name="purple_pink">#E03FD8</color>
     <color name="socially_brown">#8B4513</color>
     <color name="light_grey">#F5F5F5</color>
+    <color name="instagram_blue">#0095F6</color>
+    <color name="instagram_light_gray">#FAFAFA</color>
+    <color name="instagram_border">#DBDBDB</color>
+    <color name="green">#4CAF50</color>
+    <color name="red">#F44336</color>
 </resources>

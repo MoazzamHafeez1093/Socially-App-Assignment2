@@ -83,5 +83,5 @@ Run Espresso tests:
 4. Prepare for live demo
 
 ## 👥 Team Members
-- [Your Name] - [Your contributions]
-- [Partner Name] - [Partner contributions]
+- 22I-1120 - Asad Mehdi
+- 22I-1093 - Moazzam Hafeez

@@ -8,6 +8,7 @@ import android.content.Intent
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.view.Gravity
+import com.example.assignment1.workers.SyncWorker
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 
@@ -18,11 +19,14 @@ class MainActivity : Activity() {
         try {
             // Initialize Firebase
             FirebaseApp.initializeApp(this)
+            
+            // Initialize WorkManager periodic sync
+            SyncWorker.schedulePeriodic(this)
 
             // Create a simple splash screen programmatically
             createSimpleSplashScreen()
 
-            // Splash screen with 3-second delay - ALWAYS go to login
+            // Splash screen with 5-second delay - ALWAYS go to login
             Handler(Looper.getMainLooper()).postDelayed({
                 try {
                     android.util.Log.d("MainActivity", "Splash complete - ALWAYS going to LoginActivity")
@@ -36,7 +40,7 @@ class MainActivity : Activity() {
                     android.util.Log.e("MainActivity", "Error navigating: ${e.message}", e)
                     e.printStackTrace()
                 }
-            }, 3000) // 3000 ms = 3 seconds
+            }, 5000) // 5000 ms = 5 seconds (as per assignment rubric)
         } catch (e: Exception) {
             android.util.Log.e("MainActivity", "Error in onCreate", e)
             finish()

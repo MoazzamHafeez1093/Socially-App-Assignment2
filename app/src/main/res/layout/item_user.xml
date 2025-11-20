@@ -5,6 +5,7 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:padding="16dp"
+    android:gravity="center_vertical"
     android:background="?attr/selectableItemBackground">
 
     <de.hdodenhof.circleimageview.CircleImageView
@@ -18,7 +19,6 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:layout_marginStart="12dp"
-        android:layout_gravity="center_vertical"
         android:orientation="vertical">
 
         <TextView
@@ -34,18 +34,26 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:text="Online"
+            android:text="Say hi 👋"
             android:textColor="@color/dark_grey"
             android:textSize="14sp" />
 
     </LinearLayout>
 
     <TextView
+        android:id="@+id/messageTimeText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:text="→"
-        android:textColor="@color/brown"
-        android:textSize="18sp" />
+        android:text="· now"
+        android:textColor="@color/dark_grey"
+        android:textSize="12sp"
+        android:layout_marginEnd="8dp"/>
+
+    <ImageButton
+        android:id="@+id/cameraIcon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/camerabrown"
+        android:background="@android:color/transparent"/>
 
 </LinearLayout>

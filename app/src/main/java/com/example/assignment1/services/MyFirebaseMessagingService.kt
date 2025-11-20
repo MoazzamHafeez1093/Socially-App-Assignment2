@@ -35,6 +35,13 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 "screenshot_alert" -> {
                     showScreenshotAlertNotification(title, body, fromUserId, fromUsername)
                 }
+                "call_invitation" -> {
+                    val callerId = remoteMessage.data["callerId"]
+                    val callerName = remoteMessage.data["callerName"]
+                    val channelName = remoteMessage.data["channelName"]
+                    val callType = remoteMessage.data["callType"] ?: "video"
+                    showIncomingCallNotification(callerId, callerName, channelName, callType)
+                }
                 else -> {
                     showNotification(title, body, type)
                 }
@@ -128,6 +135,18 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         showNotificationWithIntent(title, body, pendingIntent)
     }
     
+    private fun showIncomingCallNotification(callerId: String?, callerName: String?, channelName: String?, callType: String) {
+        val intent = Intent(this, com.example.assignment1.IncomingCallActivity::class.java)
+        intent.putExtra("callerId", callerId)
+        intent.putExtra("callerName", callerName)
+        intent.putExtra("channelName", channelName)
+        intent.putExtra("callType", callType)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        
+        // For incoming call, start activity directly instead of notification
+        startActivity(intent)
+    }
+    
     private fun showNotificationWithIntent(title: String, body: String, pendingIntent: PendingIntent) {
         val channelId = "socially_notifications"
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
@@ -154,42 +173,14 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     private fun sendTokenToServer(token: String) {
-        // Save token to Firebase Database for the current user
-        val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
-        userId?.let {
-            com.google.firebase.database.FirebaseDatabase.getInstance()
-                .reference
-                .child("users")
-                .child(it)
-                .child("fcmToken")
-                .setValue(token)
-        }
+        // Token saved via REST API in SessionManager
+        android.util.Log.d("FCM", "Token: $token - save via REST API")
     }
     
     companion object {
         fun sendNotificationToUser(userId: String, title: String, body: String, type: String, fromUserId: String? = null, fromUsername: String? = null) {
-            try {
-                val database = com.google.firebase.database.FirebaseDatabase.getInstance()
-                database.reference.child("users").child(userId).child("fcmToken").get()
-                    .addOnSuccessListener { snapshot ->
-                        val token = snapshot.getValue(String::class.java)
-                        if (token != null) {
-                            // Store notification in database for offline users
-                            val notificationData = mapOf(
-                                "title" to title,
-                                "body" to body,
-                                "type" to type,
-                                "fromUserId" to (fromUserId ?: ""),
-                                "fromUsername" to (fromUsername ?: ""),
-                                "timestamp" to System.currentTimeMillis()
-                            )
-                            
-                            database.reference.child("notifications").child(userId).push().setValue(notificationData)
-                        }
-                    }
-            } catch (e: Exception) {
-                android.util.Log.e("FCM", "Error sending notification: ${e.message}")
-            }
+            // Notification sending now handled via REST API
+            android.util.Log.d("FCM", "Notification stub called - use REST API sendFCMNotification()")
         }
     }
 }

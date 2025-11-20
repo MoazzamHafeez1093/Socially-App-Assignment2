@@ -1,15 +1,21 @@
 package com.example.assignment1
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.widget.Button
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import android.content.Intent
-import android.widget.Button
-import com.google.android.material.textfield.TextInputEditText
+import com.example.assignment1.utils.FcmTokenManager
 import com.example.assignment1.utils.FirebaseAuthManager
+import com.google.android.material.textfield.TextInputEditText
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var authManager: FirebaseAuthManager
@@ -35,6 +41,19 @@ class LoginActivity : AppCompatActivity() {
         setupLoginButton()
         setupSignupButton()
         setupForgotPasswordButton()
+
+        // Ask for notifications permission on Android 13+
+        requestNotificationPermissionIfNeeded()
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val permission = Manifest.permission.POST_NOTIFICATIONS
+            val granted = ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+            if (!granted) {
+                ActivityCompat.requestPermissions(this, arrayOf(permission), 1001)
+            }
+        }
     }
     
     private fun setupLoginButton() {
@@ -60,7 +79,10 @@ class LoginActivity : AppCompatActivity() {
             try {
                 authManager.signIn(email, password, this) { success, message ->
                     if (success) {
-                        // Login successful, go to home screen
+                        // Login successful - register FCM token for push notifications
+                        FcmTokenManager.registerFcmToken()
+                        
+                        // Go to home screen
                         val intent = Intent(this, HomeScreen::class.java)
                         startActivity(intent)
                         finish()

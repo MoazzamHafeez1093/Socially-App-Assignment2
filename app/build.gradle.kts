@@ -86,6 +86,9 @@ dependencies {
     // Image picker
     implementation("com.github.dhaval2404:imagepicker:2.1")
     
+    // Agora RTC SDK for voice and video calls
+    implementation("io.agora.rtc:full-sdk:4.3.1")
+    
     // Mock calling system (no external dependencies required)
     // implementation("io.agora.rtc:full-sdk:3.3.0") // Commented out for assignment
     
@@ -95,4 +98,5 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation("androidx.test.espresso:espresso-intents:3.5.1")
 }

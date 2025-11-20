@@ -6,6 +6,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -14,13 +16,18 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.assignment1.adapters.MessageAdapter
+import com.example.assignment1.data.network.ApiClient
+import com.example.assignment1.data.prefs.SessionManager
+import com.example.assignment1.data.local.AppDatabase
 import com.example.assignment1.utils.ChatMessage
 import com.example.assignment1.utils.ChatRepository
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Instagram-style Chat Activity
@@ -33,14 +40,19 @@ import com.google.firebase.database.*
  * - Real-time message updates
  */
 class chat : AppCompatActivity() {
-    private val chatRepository = ChatRepository()
+    private lateinit var chatRepository: ChatRepository
+    private lateinit var sessionManager: SessionManager
+    private lateinit var database: AppDatabase
     private lateinit var chatId: String
+    private lateinit var otherUserId: String
     private lateinit var messagesRecyclerView: RecyclerView
     private lateinit var messageAdapter: MessageAdapter
     private val messages = mutableListOf<ChatMessage>()
     private lateinit var messageInput: EditText
     private lateinit var sendButton: ImageButton
     private val PERMISSION_REQUEST_CODE = 102
+    private val pollingHandler = Handler(Looper.getMainLooper())
+    private val pollingInterval = 3000L // Poll every 3 seconds
     
     // Image picker
     private val imagePickerLauncher = registerForActivityResult(
@@ -59,9 +71,13 @@ class chat : AppCompatActivity() {
             insets
         }
 
+        sessionManager = SessionManager(this)
+        database = AppDatabase.getInstance(this)
+        chatRepository = ChatRepository(this)
+
         // Get chat ID from intent or generate one
-        val otherUserId = intent.getStringExtra("userId") ?: "default_user"
-        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: "unknown"
+        otherUserId = intent.getStringExtra("userId") ?: "default_user"
+        val currentUserId = sessionManager.getUserId() ?: "unknown"
         chatId = generateChatId(currentUserId, otherUserId)
         
         setupUI()
@@ -107,7 +123,7 @@ class chat : AppCompatActivity() {
         }
 
         // Camera button
-        val cameraButton = findViewById<ImageButton>(R.id.btnCamera)
+        val cameraButton = findViewById<ImageView>(R.id.btnCamera)
         cameraButton.setOnClickListener {
             if (checkPermissions()) {
                 imagePickerLauncher.launch("image/*")
@@ -162,34 +178,113 @@ class chat : AppCompatActivity() {
     }
 
     private fun loadMessagesRealTime() {
-        val messagesRef = FirebaseDatabase.getInstance().reference
-            .child("messages")
-            .child(chatId)
+        // Initial load from Room cache
+        lifecycleScope.launch {
+            val cachedMessages = withContext(Dispatchers.IO) {
+                database.messageDao().getConversationMessages(chatId)
+            }
+            messages.clear()
+            messages.addAll(cachedMessages.map { it.toChatMessage() })
+            messageAdapter.notifyDataSetChanged()
+            if (messages.isNotEmpty()) {
+                messagesRecyclerView.scrollToPosition(messages.size - 1)
+            }
+        }
         
-        messagesRef.orderByChild("timestamp").addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                messages.clear()
-                for (messageSnapshot in snapshot.children) {
-                    val message = messageSnapshot.getValue(ChatMessage::class.java)
-                    message?.let { messages.add(it) }
-                }
-                messageAdapter.notifyDataSetChanged()
-                if (messages.isNotEmpty()) {
-                    messagesRecyclerView.scrollToPosition(messages.size - 1)
-                }
+        // Start polling for new messages
+        startPollingMessages()
+    }
+    
+    private fun startPollingMessages() {
+        pollingHandler.postDelayed(object : Runnable {
+            override fun run() {
+                fetchMessages()
+                pollingHandler.postDelayed(this, pollingInterval)
             }
-            
-            override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@chat, "Failed to load messages", Toast.LENGTH_SHORT).show()
+        }, pollingInterval)
+    }
+    
+    private fun fetchMessages() {
+        lifecycleScope.launch {
+            try {
+                val apiService = ApiClient.getApiService(this@chat)
+                val response = withContext(Dispatchers.IO) {
+                    apiService.getConversation(otherUserId.toInt())
+                }
+                
+                if (response.isSuccessful && response.body()?.status == "success") {
+                    val fetchedMessages = response.body()?.data ?: emptyList()
+                    
+                    // Cache in Room
+                    withContext(Dispatchers.IO) {
+                        fetchedMessages.forEach { message ->
+                            database.messageDao().insertMessage(
+                                com.example.assignment1.data.local.entities.MessageEntity.fromMessage(message)
+                            )
+                        }
+                    }
+                    
+                    // Update UI
+                    messages.clear()
+                    messages.addAll(fetchedMessages.map { 
+                        ChatMessage(
+                            messageId = it.id.toString(),
+                            chatId = chatId,
+                            senderId = it.sender_id.toString(),
+                            type = it.type ?: "text",
+                            content = it.message ?: it.media_url ?: "",
+                            timestamp = it.created_at?.let { dateStr ->
+                                // Parse ISO date to timestamp
+                                try {
+                                    java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+                                        .parse(dateStr)?.time ?: System.currentTimeMillis()
+                                } catch (e: Exception) {
+                                    System.currentTimeMillis()
+                                }
+                            } ?: System.currentTimeMillis(),
+                            isVanishMode = it.vanish_mode == 1
+                        )
+                    })
+                    messageAdapter.notifyDataSetChanged()
+                    if (messages.isNotEmpty()) {
+                        messagesRecyclerView.scrollToPosition(messages.size - 1)
+                    }
+                }
+            } catch (e: Exception) {
+                // Silent fail - use cached messages
             }
-        })
+        }
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        pollingHandler.removeCallbacksAndMessages(null)
     }
 
     private fun sendTextMessage(text: String) {
-        chatRepository.sendText(chatId, text) { success ->
+        // Get vanish mode toggle state if exists
+        val vanishModeToggle = findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.vanishModeToggle)
+        val isVanishMode = vanishModeToggle?.isChecked ?: false
+        
+        chatRepository.sendText(chatId, text, isVanishMode) { success ->
             runOnUiThread {
                 if (!success) {
                     Toast.makeText(this, "Failed to send message", Toast.LENGTH_SHORT).show()
+                } else {
+                    // Send FCM notification to the other user
+                    val currentUserName = sessionManager.getUsername() 
+                        ?: intent.getStringExtra("PersonName") 
+                        ?: "Someone"
+                    
+                    sendNotificationToUser(
+                        userId = otherUserId,
+                        title = currentUserName,
+                        body = text,
+                        type = "new_message"
+                    )
+                    
+                    // Immediately fetch to show sent message
+                    fetchMessages()
                 }
             }
         }
@@ -197,10 +292,16 @@ class chat : AppCompatActivity() {
 
     private fun sendImage(imageUri: Uri) {
         Toast.makeText(this, "Sending image...", Toast.LENGTH_SHORT).show()
-        chatRepository.sendImage(this, chatId, imageUri) { success ->
+        
+        // Get vanish mode state
+        val vanishModeToggle = findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.vanishModeToggle)
+        val isVanishMode = vanishModeToggle?.isChecked ?: false
+        
+        chatRepository.sendImage(this, chatId, imageUri, isVanishMode) { success ->
             runOnUiThread {
                 if (success) {
                     Toast.makeText(this, "Image sent", Toast.LENGTH_SHORT).show()
+                    fetchMessages()
                 } else {
                     Toast.makeText(this, "Failed to send image", Toast.LENGTH_SHORT).show()
                 }
@@ -235,7 +336,7 @@ class chat : AppCompatActivity() {
     }
 
     private fun showMessageOptionsDialog(message: ChatMessage) {
-        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val currentUserId = sessionManager.getUserId() ?: return
         
         // Only allow editing/deleting own messages
         if (message.senderId != currentUserId) {
@@ -334,5 +435,27 @@ class chat : AppCompatActivity() {
             putExtra("isIncomingCall", false)
         }
         startActivity(intent)
+    }
+    
+    private fun sendNotificationToUser(userId: String, title: String, body: String, type: String) {
+        lifecycleScope.launch {
+            try {
+                val apiService = ApiClient.getApiService(this@chat)
+                val payload = mapOf(
+                    "userId" to userId.toInt(),
+                    "title" to title,
+                    "body" to body,
+                    "type" to type
+                )
+                
+                withContext(Dispatchers.IO) {
+                    apiService.sendFCMNotification(payload)
+                }
+                
+                android.util.Log.d("FCM", "Notification sent via API to user: $userId")
+            } catch (e: Exception) {
+                android.util.Log.e("FCM", "Error sending notification: ${e.message}")
+            }
+        }
     }
 }

@@ -16,7 +16,8 @@ class UserAdapter(
 
     class UserViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val usernameText: TextView = itemView.findViewById(R.id.usernameText)
-        val userStatusText: TextView = itemView.findViewById(R.id.userStatusText)
+        val userStatusText: TextView = itemView.findViewById(R.id.userStatusText) // acts as last message preview
+        val messageTimeText: TextView? = itemView.findViewById(R.id.messageTimeText)
         val profileImageView: ImageView = itemView.findViewById(R.id.profileImageView)
     }
 
@@ -29,8 +30,10 @@ class UserAdapter(
     override fun onBindViewHolder(holder: UserViewHolder, position: Int) {
         val user = users[position]
         
-        holder.usernameText.text = user.username
-        holder.userStatusText.text = "Online" // You can make this dynamic
+    holder.usernameText.text = user.username
+    // Placeholder last-message preview and time until chat data is available
+    holder.userStatusText.text = "Have a nice day, bro!" // TODO: bind real last message
+    holder.messageTimeText?.text = "· now"
         
         // Set default profile image
         holder.profileImageView.setImageResource(R.drawable.placeholder_image)

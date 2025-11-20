@@ -127,6 +127,23 @@
                                     android:clickable="true"
                                     android:focusable="true"
                                     android:clipToOutline="true"/>
+                                
+                                <!-- Add Story Plus Button -->
+                                <ImageButton
+                                    android:id="@+id/addStoryButton"
+                                    android:layout_width="22dp"
+                                    android:layout_height="22dp"
+                                    android:layout_gravity="bottom|end"
+                                    android:layout_marginEnd="8dp"
+                                    android:layout_marginBottom="8dp"
+                                    android:src="@drawable/tab_3_plus"
+                                    android:background="@drawable/circle"
+                                    android:backgroundTint="@color/brown"
+                                    android:scaleType="centerInside"
+                                    android:padding="2dp"
+                                    android:elevation="4dp"
+                                    android:clickable="true"
+                                    android:focusable="true"/>
                             </FrameLayout>
 
                             <!-- Username below story -->
@@ -364,15 +381,9 @@
                     </LinearLayout>
                 </HorizontalScrollView>
 
-                <!-- Posts RecyclerView -->
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/postsRecyclerView"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintTop_toBottomOf="@id/storyScrollView"
-                    android:layout_marginTop="8dp" />
-
+                <!-- Static hardcoded post (kept as requested) -->
                 <androidx.cardview.widget.CardView
+                    android:id="@+id/staticPostCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:layout_constraintTop_toBottomOf="@id/storyScrollView"
@@ -508,6 +519,16 @@
 
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
+
+                <!-- Posts RecyclerView -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/postsRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    app:layout_constraintTop_toBottomOf="@id/staticPostCard"
+                    android:layout_marginTop="8dp" />
+                
 
 
             </androidx.constraintlayout.widget.ConstraintLayout>

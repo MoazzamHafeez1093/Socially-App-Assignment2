@@ -1,8 +1,14 @@
 package com.example.assignment1
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.assignment1.adapters.UserAdapter
@@ -18,16 +24,21 @@ class search : AppCompatActivity() {
     private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
     private val authManager = FirebaseAuthManager()
     private lateinit var followManager: FollowManager
-    private lateinit var searchResultsRecyclerView: RecyclerView
+    private lateinit var searchResultsLayout: LinearLayout
+    private lateinit var searchInput: EditText
     private lateinit var userAdapter: UserAdapter
     private val searchResults = mutableListOf<User>()
     private var currentFilter = "all" // "all", "followers", "following"
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_search)
         
-        // Create simple UI programmatically
-        createSimpleSearchScreen()
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
         
         try {
             followManager = FollowManager()
@@ -35,224 +46,115 @@ class search : AppCompatActivity() {
             // If Firebase fails to initialize, continue without it
         }
         
-        setupSearchResultsRecyclerView()
+        setupUI()
+        setupBottomNavigation()
     }
     
-    private fun createSimpleSearchScreen() {
-        val layout = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setBackgroundColor(android.graphics.Color.WHITE)
-            setPadding(20, 20, 20, 20)
-        }
+    private fun setupUI() {
+        searchInput = findViewById(R.id.search_input)
+        searchResultsLayout = findViewById(R.id.search_results)
         
-        val titleText = android.widget.TextView(this).apply {
-            text = "Search Users"
-            textSize = 24f
-            setTextColor(android.graphics.Color.parseColor("#784A34"))
-            gravity = android.view.Gravity.CENTER
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = 30
+        // Setup search functionality
+        searchInput.setOnEditorActionListener { _, _, _ ->
+            val query = searchInput.text.toString().trim()
+            if (query.isNotEmpty()) {
+                searchUsers(query)
             }
+            true
         }
-        
-        val backButton = android.widget.Button(this).apply {
-            text = "← Back"
-            setBackgroundColor(android.graphics.Color.parseColor("#784A34"))
-            setTextColor(android.graphics.Color.WHITE)
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = 20
-            }
-            setOnClickListener {
+    }
+    
+    private fun setupBottomNavigation() {
+        try {
+            // Home tab
+            findViewById<ImageButton>(R.id.tab_1)?.setOnClickListener {
                 finish()
             }
+            
+            // Search tab (current page)
+            findViewById<ImageButton>(R.id.tab_2_search)?.setOnClickListener {
+                // Already on search page
+            }
+            
+            // Plus tab (create post)
+            findViewById<ImageButton>(R.id.tab_3_plus)?.setOnClickListener {
+                startActivity(Intent(this, CreatePostActivity::class.java))
+            }
+            
+            // Notifications tab
+            findViewById<ImageButton>(R.id.tab_4_notification)?.setOnClickListener {
+                startActivity(Intent(this, notifications::class.java))
+            }
+            
+            // Profile tab
+            findViewById<ImageButton>(R.id.tab_5)?.setOnClickListener {
+                startActivity(Intent(this, OwnProfile::class.java))
+            }
+        } catch (e: Exception) {
+            // Continue without bottom navigation if views not found
         }
-        
-        val searchEditText = android.widget.EditText(this).apply {
-            hint = "Search by username..."
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = 20
-            }
-        }
-        
-        val searchButton = android.widget.Button(this).apply {
-            text = "Search"
-            setBackgroundColor(android.graphics.Color.parseColor("#784A34"))
-            setTextColor(android.graphics.Color.WHITE)
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = 20
-            }
-            setOnClickListener {
-                val query = searchEditText.text.toString().trim()
-                if (query.isNotEmpty()) {
-                    searchUsers(query)
-                } else {
-                    Toast.makeText(this@search, "Please enter a search query", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-        
-        val filterLayout = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.HORIZONTAL
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = 20
-            }
-        }
-        
-        val allFilterButton = android.widget.Button(this).apply {
-            text = "All"
-            setBackgroundColor(android.graphics.Color.parseColor("#784A34"))
-            setTextColor(android.graphics.Color.WHITE)
-            layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
-                marginEnd = 10
-            }
-            setOnClickListener {
-                currentFilter = "all"
-                updateFilterButtons()
-                searchUsers(searchEditText.text.toString().trim())
-            }
-        }
-        
-        val followersFilterButton = android.widget.Button(this).apply {
-            text = "Followers"
-            setBackgroundColor(android.graphics.Color.parseColor("#784A34"))
-            setTextColor(android.graphics.Color.WHITE)
-            layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
-                marginStart = 10
-                marginEnd = 10
-            }
-            setOnClickListener {
-                currentFilter = "followers"
-                updateFilterButtons()
-                searchUsers(searchEditText.text.toString().trim())
-            }
-        }
-        
-        val followingFilterButton = android.widget.Button(this).apply {
-            text = "Following"
-            setBackgroundColor(android.graphics.Color.parseColor("#784A34"))
-            setTextColor(android.graphics.Color.WHITE)
-            layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
-                marginStart = 10
-            }
-            setOnClickListener {
-                currentFilter = "following"
-                updateFilterButtons()
-                searchUsers(searchEditText.text.toString().trim())
-            }
-        }
-        
-        filterLayout.addView(allFilterButton)
-        filterLayout.addView(followersFilterButton)
-        filterLayout.addView(followingFilterButton)
-        
-        searchResultsRecyclerView = RecyclerView(this).apply {
-            layoutManager = LinearLayoutManager(this@search)
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                0,
-                1f
-            )
-        }
-        
-        layout.addView(titleText)
-        layout.addView(backButton)
-        layout.addView(searchEditText)
-        layout.addView(searchButton)
-        layout.addView(filterLayout)
-        layout.addView(searchResultsRecyclerView)
-        setContentView(layout)
-    }
-    
-    private fun setupSearchResultsRecyclerView() {
-        userAdapter = UserAdapter(searchResults) { user ->
-            // Handle user click - could open user profile or send follow request
-            val currentUser = authManager.getCurrentUser()
-            if (currentUser != null && currentUser.userId != user.userId) {
-                followManager.sendFollowRequest(currentUser.userId, user.userId, this) { success, message ->
-                    if (success) {
-                        Toast.makeText(this, "Follow request sent to ${user.username}", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-        }
-        searchResultsRecyclerView.adapter = userAdapter
-    }
-    
-    private fun updateFilterButtons() {
-        // This would update button colors based on current filter
-        // For simplicity, keeping all buttons the same color
     }
     
     private fun searchUsers(query: String) {
         try {
+            // Clear previous results from UI
+            searchResultsLayout.removeAllViews()
+            
             val currentUser = authManager.getCurrentUser()
             if (currentUser != null) {
                 when (currentFilter) {
-                    "followers" -> {
-                        searchInFollowers(query, currentUser.userId)
-                    }
-                    "following" -> {
-                        searchInFollowing(query, currentUser.userId)
-                    }
-                    else -> {
-                        searchAllUsers(query)
-                    }
+                    "followers" -> searchInFollowers(query, currentUser.userId)
+                    "following" -> searchInFollowing(query, currentUser.userId)
+                    else -> searchAllUsers(query)
                 }
             } else {
                 searchAllUsers(query)
             }
         } catch (e: Exception) {
-            Toast.makeText(this, "Demo mode - Search functionality", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Search error: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
     
     private fun searchAllUsers(query: String) {
         try {
+            // Fetch all users, then perform case-insensitive contains filtering locally
             database.reference.child("users")
-                .orderByChild("username")
-                .startAt(query)
-                .endAt(query + "\uf8ff")
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
-                        val users = mutableListOf<User>()
+                        val filtered = mutableListOf<User>()
                         for (userSnapshot in snapshot.children) {
-                            val user = userSnapshot.getValue(User::class.java)
-                            if (user != null) {
-                                users.add(user)
+                            val user = try { userSnapshot.getValue(User::class.java) } catch (e: Exception) { null }
+                            if (user != null && user.username.contains(query, ignoreCase = true)) {
+                                filtered.add(user)
                             }
                         }
-                        
                         runOnUiThread {
-                            searchResults.clear()
-                            searchResults.addAll(users)
-                            userAdapter.notifyDataSetChanged()
-                            Toast.makeText(this@search, "Found ${users.size} users", Toast.LENGTH_SHORT).show()
+                            displaySearchResults(filtered)
+                            Toast.makeText(this@search, "Found ${filtered.size} users", Toast.LENGTH_SHORT).show()
                         }
                     }
-                    
                     override fun onCancelled(error: DatabaseError) {
-                        runOnUiThread {
-                            Toast.makeText(this@search, "Search failed", Toast.LENGTH_SHORT).show()
-                        }
+                        runOnUiThread { Toast.makeText(this@search, "Search failed", Toast.LENGTH_SHORT).show() }
                     }
                 })
         } catch (e: Exception) {
-            Toast.makeText(this, "Demo mode - Search functionality", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Search error: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    private fun displaySearchResults(users: List<User>) {
+        searchResultsLayout.removeAllViews()
+        
+        for (user in users) {
+            val userView = layoutInflater.inflate(R.layout.search_user_row, searchResultsLayout, false)
+            // Setup user view with data
+            userView.setOnClickListener {
+                // Open user profile
+                val intent = Intent(this, UserProfile::class.java)
+                intent.putExtra("USER_ID", user.userId)
+                startActivity(intent)
+            }
+            searchResultsLayout.addView(userView)
         }
     }
     
@@ -263,14 +165,12 @@ class search : AppCompatActivity() {
                     it.username.contains(query, ignoreCase = true) 
                 }
                 runOnUiThread {
-                    searchResults.clear()
-                    searchResults.addAll(filteredFollowers)
-                    userAdapter.notifyDataSetChanged()
+                    displaySearchResults(filteredFollowers)
                     Toast.makeText(this@search, "Found ${filteredFollowers.size} followers", Toast.LENGTH_SHORT).show()
                 }
             }
         } catch (e: Exception) {
-            Toast.makeText(this, "Demo mode - Search in followers", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Error searching followers", Toast.LENGTH_SHORT).show()
         }
     }
     
@@ -281,14 +181,12 @@ class search : AppCompatActivity() {
                     it.username.contains(query, ignoreCase = true) 
                 }
                 runOnUiThread {
-                    searchResults.clear()
-                    searchResults.addAll(filteredFollowing)
-                    userAdapter.notifyDataSetChanged()
+                    displaySearchResults(filteredFollowing)
                     Toast.makeText(this@search, "Found ${filteredFollowing.size} following", Toast.LENGTH_SHORT).show()
                 }
             }
         } catch (e: Exception) {
-            Toast.makeText(this, "Demo mode - Search in following", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Error searching following", Toast.LENGTH_SHORT).show()
         }
     }
 }

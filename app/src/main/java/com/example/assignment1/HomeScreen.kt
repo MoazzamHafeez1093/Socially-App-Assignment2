@@ -2,6 +2,7 @@ package com.example.assignment1
 
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
@@ -113,13 +114,28 @@ class HomeScreen : AppCompatActivity() {
         }
 
         val storyOwnBtn = findViewById<ImageView>(R.id.profileImageView)
+        val addStoryBtn = findViewById<ImageButton>(R.id.addStoryButton)
+
+        // Simplified story logic: always allow upload from + button, decide view/upload for big circle after reload
+        addStoryBtn.setOnClickListener {
+            val intentStoryUpload = Intent(this, story_Upload::class.java)
+            imageUriString?.let {
+                val imageUri = Uri.parse(it)
+                intentStoryUpload.putExtra("PROFILE_IMAGE_URI", imageUri.toString())
+            }
+            // Start for result so we can refresh stories when returning
+            startActivityForResult(intentStoryUpload, 200)
+            overridePendingTransition(0, 0)
+        }
+
+        // Initially (before stories load) tapping big circle uploads a story
         storyOwnBtn.setOnClickListener {
             val intentStoryUpload = Intent(this, story_Upload::class.java)
             imageUriString?.let {
                 val imageUri = Uri.parse(it)
-                intentStoryUpload.putExtra("PROFILE_IMAGE_URI", imageUri.toString()) // Pass URI as String
+                intentStoryUpload.putExtra("PROFILE_IMAGE_URI", imageUri.toString())
             }
-            startActivity(intentStoryUpload)
+            startActivityForResult(intentStoryUpload, 200)
             overridePendingTransition(0, 0)
         }
 
@@ -177,6 +193,11 @@ class HomeScreen : AppCompatActivity() {
         }
         postsRecyclerView.layoutManager = LinearLayoutManager(this)
         postsRecyclerView.adapter = postAdapter
+        // Improve scroll smoothness when inside ScrollView
+        postsRecyclerView.isNestedScrollingEnabled = false
+        postsRecyclerView.overScrollMode = RecyclerView.OVER_SCROLL_NEVER
+        postsRecyclerView.itemAnimator = null
+        postsRecyclerView.setItemViewCacheSize(20)
         } catch (e: Exception) {
             // If RecyclerView setup fails, continue without posts
         }
@@ -199,8 +220,11 @@ class HomeScreen : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 100 && resultCode == RESULT_OK) {
-            // Refresh posts when returning from create post
             loadPostsFromFirebase()
+        }
+        if (requestCode == 200 && resultCode == RESULT_OK) {
+            // Story uploaded, reload stories and adjust click behaviour
+            loadStoriesFromFirebase()
         }
     }
 
@@ -339,37 +363,89 @@ class HomeScreen : AppCompatActivity() {
     
     private fun updateStoriesUI(stories: List<com.example.assignment1.models.Story>) {
         try {
-            // Find the stories RecyclerView in the layout using getIdentifier
-            val storiesRecyclerViewId = resources.getIdentifier("storiesRecyclerView", "id", packageName)
-            val storiesRecyclerView = if (storiesRecyclerViewId != 0) {
-                findViewById<RecyclerView?>(storiesRecyclerViewId)
-            } else {
-                null
+            if (stories.isEmpty()) {
+                return
             }
             
-            if (storiesRecyclerView != null) {
-                // Set up horizontal layout manager
-                val layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-                storiesRecyclerView.layoutManager = layoutManager
-                
-                // Create and set adapter
-                val storyAdapter = com.example.assignment1.adapters.StoryAdapter(stories) { story ->
-                    // Handle story click - open story viewer
-                    val intent = Intent(this, UserStoryView::class.java)
-                    intent.putExtra("story", story)
-                    startActivity(intent)
+            // Populate the first story bubble (story1/profileImageView) with current user's story if available
+            val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+            val myStory = stories.firstOrNull { it.userId == currentUserId }
+            
+            try {
+                val profileImageView = findViewById<ImageView>(R.id.profileImageView)
+                val usernameTextView = findViewById<TextView>(R.id.usernameTextView)
+                if (myStory != null && !myStory.userProfileImage.isNullOrEmpty()) {
+                    val bitmap = Base64Image.base64ToBitmap(myStory.userProfileImage)
+                    profileImageView.setImageBitmap(bitmap)
+                    usernameTextView.text = "Your story"
+                    profileImageView.setOnClickListener {
+                        val intent = Intent(this, storyViewOwn::class.java)
+                        startActivity(intent)
+                        overridePendingTransition(0, 0)
+                    }
+                } else {
+                    // No active story yet – big circle allows upload
+                    usernameTextView.text = "Add story"
+                    profileImageView.setOnClickListener {
+                        val intentStoryUpload = Intent(this, story_Upload::class.java)
+                        startActivityForResult(intentStoryUpload, 200)
+                        overridePendingTransition(0, 0)
+                    }
                 }
-                storiesRecyclerView.adapter = storyAdapter
-                
-                if (stories.isNotEmpty()) {
-                    Toast.makeText(this, "Loaded ${stories.size} active stories", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                // Continue if view not found
+            }
+            
+            // Populate additional story bubbles (story2-story6) with other users' stories
+            val otherStories = stories.filter { it.userId != currentUserId }.take(5)
+            val storyViews = listOf(
+                Triple(R.id.story2, "Ayesha", R.drawable.ic_default_profile),
+                Triple(R.id.story3, "Danny", R.drawable.danny_rob),
+                Triple(R.id.story4, "Sofia", R.drawable.sofia_martinez),
+                Triple(R.id.story5, "Hannah", R.drawable.hannah_lee),
+                Triple(R.id.story6, "Omar", R.drawable.omar_sheikh)
+            )
+            
+            otherStories.forEachIndexed { index, story ->
+                if (index < storyViews.size) {
+                    try {
+                        val (storyLayoutId, _, _) = storyViews[index]
+                        val storyLayout = findViewById<LinearLayout>(storyLayoutId)
+                        
+                        // Find the ImageView inside the story layout
+                        val storyImageView = storyLayout.findViewById<ImageView>(
+                            resources.getIdentifier("UserStoryView", "id", packageName)
+                        )
+                        val storyUsername = storyLayout.findViewById<TextView>(
+                            resources.getIdentifier("usernameTextView", "id", packageName)
+                        )
+                        
+                        // Set story image from Firebase
+                        if (storyImageView != null && !story.userProfileImage.isNullOrEmpty()) {
+                            val bitmap = Base64Image.base64ToBitmap(story.userProfileImage)
+                            storyImageView.setImageBitmap(bitmap)
+                        }
+                        
+                        // Set username
+                        if (storyUsername != null) {
+                            storyUsername.text = story.username
+                        }
+                        
+                        // Set click listener to open story viewer
+                        storyLayout.setOnClickListener {
+                            val intent = Intent(this, UserStoryView::class.java)
+                            intent.putExtra("STORY_USER_ID", story.userId)
+                            intent.putExtra("STORY_USERNAME", story.username)
+                            startActivity(intent)
+                        }
+                    } catch (e: Exception) {
+                        // Continue if view not found
+                    }
                 }
-            } else {
-                // RecyclerView not found in layout - stories feature needs layout update
-                // See LAYOUT_UPDATES_REQUIRED.md for instructions
-                if (stories.isNotEmpty()) {
-                    Toast.makeText(this, "${stories.size} stories available (add storiesRecyclerView to layout)", Toast.LENGTH_SHORT).show()
-                }
+            }
+            
+            if (stories.isNotEmpty()) {
+                Toast.makeText(this, "Loaded ${stories.size} active stories", Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
             // If story UI update fails, continue without stories
@@ -377,32 +453,43 @@ class HomeScreen : AppCompatActivity() {
         }
     }
     
-    private fun cleanupExpiredStories(currentTime: Long) {
+    private fun checkUserStoryStatus(callback: (Boolean) -> Unit) {
         try {
-            // Remove expired stories from Firebase
+            val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+            if (currentUserId == null) {
+                callback(false)
+                return
+            }
+            
+            val currentTime = System.currentTimeMillis()
             database.reference.child("stories")
-                .orderByChild("expiresAt")
-                .endAt(currentTime.toDouble())
+                .orderByChild("userId")
+                .equalTo(currentUserId)
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
-                        val expiredStoryIds = mutableListOf<String>()
+                        var hasActiveStory = false
                         for (storySnapshot in snapshot.children) {
-                            expiredStoryIds.add(storySnapshot.key ?: "")
+                            val expiresAt = storySnapshot.child("expiresAt").getValue(Long::class.java) ?: 0
+                            if (expiresAt > currentTime) {
+                                hasActiveStory = true
+                                break
+                            }
                         }
-                        
-                        // Remove expired stories
-                        expiredStoryIds.forEach { storyId ->
-                            database.reference.child("stories").child(storyId).removeValue()
-                        }
+                        callback(hasActiveStory)
                     }
                     
                     override fun onCancelled(error: DatabaseError) {
-                        // Handle error silently
+                        callback(false)
                     }
                 })
         } catch (e: Exception) {
-            // If Firebase is not initialized, continue without cleanup
+            callback(false)
         }
+    }
+    
+    private fun cleanupExpiredStories(currentTime: Long) {
+        // Story cleanup now handled by REST API backend
+        // This is a stub for compatibility
     }
     
     private fun createSimpleHomeScreen() {
